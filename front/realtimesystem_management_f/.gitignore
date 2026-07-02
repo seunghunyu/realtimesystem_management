@@ -1,0 +1,16 @@
+# 의존성 패키지 폴더 (무조건 제외)
+node_modules/
+
+# 빌드 결과물 폴더
+dist/
+build/
+
+# 환경 변수 및 비밀키 파일 (나중에 추가될 경우를 대비)
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# 운영체제 임시 파일
+.DS_Store
+Thumbs.db

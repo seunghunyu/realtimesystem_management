@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: management
+  datasource:
+    url: jdbc:mariadb://localhost:3307/management
+    username: yush
+    password: yush
+    driver-class-name: org.mariadb.jdbc.Driver
+
+    jpa:
+      hibernate:
+        ddl-auto: none      # create, create-drop, validate, none 등 상황에 맞게 변경
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
+          dialect: org.hibernate.dialect.MariaDBDialect
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+
+server:
+  port: 8111
+
+
+#Maria DB 12.3  3307   root/root
+

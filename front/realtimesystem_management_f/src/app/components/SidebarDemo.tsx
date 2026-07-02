@@ -38,8 +38,12 @@ import {
   FolderOpen,
   ChevronLeft,
   ChevronUp,
+  IbmLpa,
+  SettingsEdit,
+  DataBlob,
+  IbmEngineeringSystemsDesignRhapsody,ItemUsage,TaskApproved
 } from "@carbon/icons-react";
-import { GridManagement } from "./GridManagement";
+import { CampManagement } from "./CampManagement";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
 
 // Softer spring animation curve
@@ -374,17 +378,17 @@ function getSidebarContent(
           items: [
             {
               icon: (
-                <View size={16} className="text-neutral-50" />
+                <IbmLpa size={16} className="text-neutral-50" />
               ),
               label: "Campaign Management",
               isActive: true,
             },
             {
               icon: (
-                <View size={16} className="text-neutral-50" />
+                <TaskApproved size={16} className="text-neutral-50" />
               ),
               label: "Campaign Approval List",
-              isActive: true,
+              isActive: false,
             },
             // {
             //   icon: (
@@ -441,14 +445,14 @@ function getSidebarContent(
           items: [
             {
               icon: (
-                <Report size={16} className="text-neutral-50" />
+                <ItemUsage size={16} className="text-neutral-50" />
               ),
               label: "Item Management",
               hasDropdown: false
             },
             {
               icon: (
-                <Report size={16} className="text-neutral-50" />
+                <IbmEngineeringSystemsDesignRhapsody size={16} className="text-neutral-50" />
               ),
               label: "Item Code Mapping Management",
               hasDropdown: false
@@ -462,7 +466,7 @@ function getSidebarContent(
             },
             {
               icon: (
-                <Report size={16} className="text-neutral-50" />
+                <DataBlob size={16} className="text-neutral-50" />
               ),
               label: "Data Format Management",
               hasDropdown: false
@@ -474,7 +478,7 @@ function getSidebarContent(
           items: [
             {
               icon: (
-                <Report size={16} className="text-neutral-50" />
+                <SettingsEdit  size={16} className="text-neutral-50" />
               ),
               label: "System Variable Management",
               hasDropdown: false
@@ -1068,32 +1072,32 @@ function IconNavigation({
       icon: <Dashboard size={16} />,
       label: "Dashboard",
     },
-    { id: "tasks", icon: <Task size={16} />, label: "Tasks" },
-    {
-      id: "projects",
-      icon: <Folder size={16} />,
-      label: "Projects",
-    },
-    {
-      id: "calendar",
-      icon: <Calendar size={16} />,
-      label: "Calendar",
-    },
-    {
-      id: "teams",
-      icon: <UserMultiple size={16} />,
-      label: "Teams",
-    },
+    // { id: "tasks", icon: <Task size={16} />, label: "Tasks" },
+    // {
+    //   id: "projects",
+    //   icon: <Folder size={16} />,
+    //   label: "Projects",
+    // },
+    // {
+    //   id: "calendar",
+    //   icon: <Calendar size={16} />,
+    //   label: "Calendar",
+    // },
+    // {
+    //   id: "teams",
+    //   icon: <UserMultiple size={16} />,
+    //   label: "Teams",
+    // },
     {
       id: "analytics",
       icon: <Analytics size={16} />,
       label: "Analytics",
     },
-    {
-      id: "files",
-      icon: <DocumentAdd size={16} />,
-      label: "Files",
-    },
+    // {
+    //   id: "files",
+    //   icon: <DocumentAdd size={16} />,
+    //   label: "Files",
+    // },
   ];
 
   return (
@@ -1304,7 +1308,7 @@ export function Frame760() {
   return (
     <div className="bg-[#1a1a1a] box-border content-stretch flex flex-row gap-0 items-start justify-center p-0 relative size-full min-h-screen">
       <TwoLevelSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-      {activeSection === "analytics" ? <AnalyticsDashboard /> : <GridManagement />}
+      {activeSection === "analytics" ? <AnalyticsDashboard /> : <CampManagement />}
     </div>
   );
 }

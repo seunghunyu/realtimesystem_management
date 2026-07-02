@@ -1,9 +1,8 @@
 package com.realtime.management.controller;
 
-import com.realtime.management.dto.UserRequest;
-import com.realtime.management.dto.UserResponse;
-import com.realtime.management.entity.User;
-import com.realtime.management.service.UserService;
+import com.realtime.management.dto.user.UserRequest;
+import com.realtime.management.dto.user.UserResponse;
+import com.realtime.management.service.users.UsersService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +10,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-public class UserController {
+public class UsersController {
 
-    private final UserService service;
+    private final UsersService service;
 
     @PostMapping("/save")
     public UserResponse save(@Valid @RequestBody UserRequest request){

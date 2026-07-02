@@ -1,9 +1,6 @@
 package com.realtime.management.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor  //빌더가 내부적으로 쓸 전체 생성자 자동 생성
 @AllArgsConstructor //JPA나 프레임워크가 필요로 하는 기본 생성자 자동 생성
 @Builder //기본 생성자 방식 처럼 인자의 순서를 맞출 필요가 없음 User.builder().name("홍길동").email("hong@gmail.com").build();
-public class User {
+public class Users {
     @Id
     @Column(name = "user_id")
     private String userId;
@@ -34,10 +31,15 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public void update(String userName, String role, String stat, String deptCd){
+    // 💡 다대일(N:1) 매핑 설정 (외래키 관리 주체)
+    @ManyToOne(fetch = FetchType.LAZY) // 지연 로딩 설정으로 성능 최적화
+    @JoinColumn(name = "dept_cd")     // 데이터베이스의 실제 FK 컬럼명
+    private Depts depts;
+
+    public void update(String userName, String role, String stat, Depts depts){
         this.userName = userName;
         this.role = role;
         this.stat = stat;
-        this.deptCd = deptCd;
+        this.depts = depts;
     }
 }

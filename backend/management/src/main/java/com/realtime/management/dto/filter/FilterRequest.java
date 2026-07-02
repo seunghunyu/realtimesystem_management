@@ -1,13 +1,12 @@
-package com.realtime.management.dto;
+package com.realtime.management.dto.filter;
 
-import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class UserRequest {
+public class FilterRequest {
     @NotBlank
     private String userId;
 

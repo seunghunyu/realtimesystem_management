@@ -17,5 +17,6 @@ ERD 구성<br>
  캠페인 관리 테이블
 <br><br>    
 
-<img width="811" height="341" alt="image" src="https://github.com/user-attachments/assets/a0b0dd0b-7104-439e-99d1-d575b826ee3c" />
+<img width="1100" height="653" alt="image" src="https://github.com/user-attachments/assets/7a8d53f2-e5ba-4aab-a71e-505008422cec" />
+
     

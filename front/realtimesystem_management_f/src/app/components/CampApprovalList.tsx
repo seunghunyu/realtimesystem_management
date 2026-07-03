@@ -412,7 +412,7 @@ function RegistrationModal({
 type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
-export function CampManagement() {
+export function CampApprovalList() {
   const [users, setUsers] = useState<DataItem[]>(INITIAL_DATA);
   const [showModal, setShowModal] = useState(false);
 

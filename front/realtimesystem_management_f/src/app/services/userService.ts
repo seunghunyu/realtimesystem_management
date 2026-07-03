@@ -14,12 +14,11 @@ import { apiClient, type ApiResult } from "../lib/apiClient";
 // ── payload / response types ─────────────────────────────────────────────────
 
 export interface UserDto {
-  id: string;
-  name: string;
-  email: string;
-  status: "active" | "inactive" | "pending";
-  role: string;
-  department: string;
+  user_id: string;
+  user_name: string;
+  stat: "active" | "inactive" | "pending";
+  role_cd: string;
+  dept_nm: string;
   address?: string;
   joinDate: string;
   lastActive: string;
@@ -27,19 +26,19 @@ export interface UserDto {
 
 /** Body sent when registering a new user */
 export interface CreateUserPayload {
-  name: string;
-  email: string;
+  user_id: string;
+  user_name: string;
   /** plain-text; the server must hash it */
   password: string;
-  role: string;
-  department: string;
+  role_cd: string;
+  dept_nm: string;
   address?: string;
 }
 
 /** Body sent when updating an existing user — all fields optional */
 export type UpdateUserPayload = Partial<
   Omit<CreateUserPayload, "password"> & {
-    status: UserDto["status"];
+    stat: UserDto["stat"];
     newPassword: string;
   }
 >;

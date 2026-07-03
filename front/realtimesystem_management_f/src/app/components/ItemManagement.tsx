@@ -41,57 +41,49 @@ import { Badge } from "./ui/badge";
 
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
-  id: string;
-  name: string;
-  email: string;
-  status: "active" | "inactive" | "pending";
-  role: string;
-  department: string;
+  user_id: string;
+  user_name: string;
+  stat: "active" | "inactive" | "pending";
+  role_cd: string;
+  dept_nm: string;
   joinDate: string;
   lastActive: string;
   address?: string;
 }
 
 interface FormState {
-  name: string;
-  email: string;
+  user_id : string;
+  user_name: string;
   password: string;
   confirmPassword: string;
   address: string;
-  role: string;
-  department: string;
+  role_cd: string;
+  dept_nm: string;
 }
 
 interface FormErrors {
-  name?: string;
-  email?: string;
+  user_id?: string;
+  user_name?: string;
   password?: string;
   confirmPassword?: string;
   address?: string;
-  role?: string;
-  department?: string;
+  role_cd?: string;
+  dept_nm?: string;
 }
 
 // ── initial data ───────────────────────────────────────────────
 const INITIAL_DATA: DataItem[] = [
-  { id: "1", name: "김철수", email: "kim.chulsoo@company.com", status: "active", role: "개발자", department: "엔지니어링", joinDate: "2024-01-15", lastActive: "2분 전" },
-  { id: "2", name: "이영희", email: "lee.younghee@company.com", status: "active", role: "디자이너", department: "디자인", joinDate: "2024-02-20", lastActive: "5분 전" },
-  { id: "3", name: "박지민", email: "park.jimin@company.com", status: "pending", role: "마케터", department: "마케팅", joinDate: "2024-03-10", lastActive: "1시간 전" },
-  { id: "4", name: "최민수", email: "choi.minsoo@company.com", status: "active", role: "프로젝트 매니저", department: "엔지니어링", joinDate: "2023-11-05", lastActive: "30분 전" },
-  { id: "5", name: "정수진", email: "jung.soojin@company.com", status: "inactive", role: "개발자", department: "엔지니어링", joinDate: "2024-01-20", lastActive: "3일 전" },
-  { id: "6", name: "강동원", email: "kang.dongwon@company.com", status: "active", role: "데이터 분석가", department: "애널리틱스", joinDate: "2024-04-01", lastActive: "10분 전" },
-  { id: "7", name: "송혜교", email: "song.hyekyo@company.com", status: "active", role: "UX 디자이너", department: "디자인", joinDate: "2023-12-15", lastActive: "15분 전" },
-  { id: "8", name: "윤상현", email: "yoon.sanghyun@company.com", status: "pending", role: "개발자", department: "엔지니어링", joinDate: "2024-05-10", lastActive: "2시간 전" },
-  { id: "9", name: "한지민", email: "han.jimin@company.com", status: "active", role: "제품 매니저", department: "제품", joinDate: "2024-02-28", lastActive: "20분 전" },
-  { id: "10", name: "임시완", email: "lim.siwan@company.com", status: "inactive", role: "마케터", department: "마케팅", joinDate: "2023-10-01", lastActive: "1주일 전" },
+  { user_id: "kim.chulsoo@company.com", user_name: "김철수",  stat: "active", role_cd: "개발자", dept_nm: "엔지니어링", joinDate: "2024-01-15", lastActive: "2분 전" },
+  { user_id: "lee.younghee@company.com", user_name: "이영희",  stat: "active", role_cd: "디자이너", dept_nm: "디자인", joinDate: "2024-02-20", lastActive: "5분 전" },
+  { user_id: "park.jimin@company.com", user_name: "박지민",  stat: "pending", role_cd: "마케터", dept_nm: "마케팅", joinDate: "2024-03-10", lastActive: "1시간 전" },
 ];
 
 const ROLES = ["개발자", "디자이너", "마케터", "프로젝트 매니저", "데이터 분석가", "UX 디자이너", "제품 매니저", "기타"];
 const DEPARTMENTS = ["엔지니어링", "디자인", "마케팅", "애널리틱스", "제품", "기타"];
 
 const EMPTY_FORM: FormState = {
-  name: "", email: "", password: "", confirmPassword: "",
-  address: "", role: "", department: "",
+  user_name: "", user_id: "", password: "", confirmPassword: "",
+  address: "", role_cd: "", dept_nm: "",
 };
 
 // ── helpers ────────────────────────────────────────────────────
@@ -101,11 +93,11 @@ function today() {
 
 function validateForm(f: FormState): FormErrors {
   const e: FormErrors = {};
-  if (!f.name.trim()) e.name = "이름을 입력해주세요.";
-  if (!f.email.trim()) {
-    e.email = "이메일을 입력해주세요.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) {
-    e.email = "올바른 이메일 형식이 아닙니다.";
+  if (!f.user_name.trim()) e.user_name = "이름을 입력해주세요.";
+  if (!f.user_id.trim()) {
+    e.user_id = "이메일을 입력해주세요.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.user_id)) {
+    e.user_id = "올바른 이메일 형식이 아닙니다.";
   }
   if (!f.password) {
     e.password = "비밀번호를 입력해주세요.";
@@ -118,8 +110,8 @@ function validateForm(f: FormState): FormErrors {
     e.confirmPassword = "비밀번호가 일치하지 않습니다.";
   }
   if (!f.address.trim()) e.address = "주소를 입력해주세요.";
-  if (!f.role) e.role = "역할을 선택해주세요.";
-  if (!f.department) e.department = "부서를 선택해주세요.";
+  if (!f.role_cd) e.role_cd = "역할을 선택해주세요.";
+  if (!f.dept_nm) e.dept_nm = "부서를 선택해주세요.";
   return e;
 }
 
@@ -179,11 +171,11 @@ function RegistrationModal({
 
     // ── REST 요청: POST /api/users ──────────────────────────
     const result = await userService.create({
-      name: form.name.trim(),
-      email: form.email.trim(),
+      user_id: form.user_id.trim(),
+      user_name: form.user_name.trim(),
       password: form.password,
-      role: form.role,
-      department: form.department,
+      role_cd: form.role_cd,
+      dept_nm: form.dept_nm,
       address: form.address.trim(),
     });
     // ───────────────────────────────────────────────────────
@@ -195,23 +187,21 @@ function RegistrationModal({
     const newItem: DataItem =
       result.ok && result.data
         ? {
-            id: result.data.id,
-            name: result.data.name,
-            email: result.data.email,
-            status: result.data.status ?? "pending",
-            role: result.data.role,
-            department: result.data.department,
+            user_id: result.data.user_id,
+            user_name: result.data.user_name,
+            stat: result.data.stat ?? "pending",
+            role_cd: result.data.role_cd,
+            dept_nm: result.data.dept_nm,
             address: result.data.address,
             joinDate: result.data.joinDate ?? today(),
             lastActive: result.data.lastActive ?? "방금 전",
           }
         : {
-            id: String(Date.now()),
-            name: form.name.trim(),
-            email: form.email.trim(),
-            status: "pending",
-            role: form.role,
-            department: form.department,
+            user_id: form.user_id.trim(),
+            user_name: form.user_name.trim(),
+            stat: "pending",
+            role_cd: form.role_cd,
+            dept_nm: form.dept_nm,
             address: form.address.trim(),
             joinDate: today(),
             lastActive: "방금 전",
@@ -271,22 +261,22 @@ function RegistrationModal({
         {/* form body */}
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4 relative" style={{ maxHeight: "60vh" }}>
 
-          <Field label="이름" required error={errors.name}>
+          <Field label="이름" required error={errors.user_name}>
             <Input
-              value={form.name}
-              onChange={e => set("name", e.target.value)}
+              value={form.user_name}
+              onChange={e => set("user_name", e.target.value)}
               placeholder="홍길동"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.name ? "border-rose-500" : ""}`}
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_name ? "border-rose-500" : ""}`}
             />
           </Field>
 
-          <Field label="이메일" required error={errors.email}>
+          <Field label="아이디" required error={errors.user_id}>
             <Input
               type="email"
-              value={form.email}
-              onChange={e => set("email", e.target.value)}
+              value={form.user_id}
+              onChange={e => set("user_id", e.target.value)}
               placeholder="example@company.com"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.email ? "border-rose-500" : ""}`}
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_id ? "border-rose-500" : ""}`}
             />
           </Field>
 
@@ -350,9 +340,9 @@ function RegistrationModal({
             />
           </Field>
 
-          <Field label="역할" required error={errors.role}>
-            <Select value={form.role} onValueChange={v => set("role", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.role ? "border-rose-500" : ""}`}>
+          <Field label="역할" required error={errors.role_cd}>
+            <Select value={form.role_cd} onValueChange={v => set("role_cd", v)}>
+              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.role_cd ? "border-rose-500" : ""}`}>
                 <SelectValue placeholder="역할 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -361,9 +351,9 @@ function RegistrationModal({
             </Select>
           </Field>
 
-          <Field label="부서" required error={errors.department}>
-            <Select value={form.department} onValueChange={v => set("department", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.department ? "border-rose-500" : ""}`}>
+          <Field label="부서" required error={errors.dept_nm}>
+            <Select value={form.dept_nm} onValueChange={v => set("dept_nm", v)}>
+              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.dept_nm ? "border-rose-500" : ""}`}>
                 <SelectValue placeholder="부서 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -422,25 +412,25 @@ function RegistrationModal({
 type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
-export function GridManagement() {
+export function ItemManagement() {
   const [users, setUsers] = useState<DataItem[]>(INITIAL_DATA);
   const [showModal, setShowModal] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortField, setSortField] = useState<SortField>("user_name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const filteredAndSortedData = useMemo(() => {
     const filtered = users.filter(item => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = item.name.toLowerCase().includes(q) ||
-        item.email.toLowerCase().includes(q) ||
-        item.role.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
-      const matchesDept = departmentFilter === "all" || item.department === departmentFilter;
+      const matchesSearch = item.user_name.toLowerCase().includes(q) ||
+        item.user_id.toLowerCase().includes(q) ||
+        item.role_cd.toLowerCase().includes(q);
+      const matchesStatus = statusFilter === "all" || item.stat === statusFilter;
+      const matchesDept = departmentFilter === "all" || item.dept_nm === departmentFilter;
       return matchesSearch && matchesStatus && matchesDept;
     });
 
@@ -454,7 +444,7 @@ export function GridManagement() {
     return filtered;
   }, [users, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
 
-  const departments = Array.from(new Set(users.map(u => u.department)));
+  const departments = Array.from(new Set(users.map(u => u.dept_nm)));
 
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortDirection(d => d === "asc" ? "desc" : "asc");
@@ -463,7 +453,7 @@ export function GridManagement() {
 
   const toggleSelectAll = () => {
     if (selectedItems.size === filteredAndSortedData.length) setSelectedItems(new Set());
-    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.id)));
+    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.user_id)));
   };
 
   const toggleSelectItem = (id: string) => {
@@ -477,7 +467,7 @@ export function GridManagement() {
   const deleteSelected = async () => {
     const ids = Array.from(selectedItems);
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => !selectedItems.has(u.id)));
+    setUsers(prev => prev.filter(u => !selectedItems.has(u.user_id)));
     setSelectedItems(new Set());
     // REST 요청: DELETE /api/users/:id (병렬)
     await userService.removeMany(ids);
@@ -485,7 +475,7 @@ export function GridManagement() {
 
   const deleteUser = async (id: string) => {
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => u.id !== id));
+    setUsers(prev => prev.filter(u => u.user_id !== id));
     setSelectedItems(prev => { const n = new Set(prev); n.delete(id); return n; });
     // REST 요청: DELETE /api/users/:id
     await userService.remove(id);
@@ -495,12 +485,12 @@ export function GridManagement() {
     setUsers(prev => [item, ...prev]);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (stat: string) => {
+    switch (stat) {
       case "active":  return <Badge className="bg-green-600 hover:bg-green-700 text-xs">활성</Badge>;
       case "inactive":return <Badge className="bg-neutral-600 hover:bg-neutral-700 text-xs">비활성</Badge>;
       case "pending": return <Badge className="bg-yellow-600 hover:bg-yellow-700 text-xs">대기중</Badge>;
-      default:        return <Badge className="text-xs">{status}</Badge>;
+      default:        return <Badge className="text-xs">{stat}</Badge>;
     }
   };
 
@@ -651,15 +641,15 @@ export function GridManagement() {
                   <TableHead className="text-neutral-400">상태</TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("role")}
+                    onClick={() => handleSort("role_cd")}
                   >
-                    <div className="flex items-center gap-1">역할<SortIcon field="role" /></div>
+                    <div className="flex items-center gap-1">역할<SortIcon field="role_cd" /></div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("department")}
+                    onClick={() => handleSort("dept_nm")}
                   >
-                    <div className="flex items-center gap-1">부서<SortIcon field="department" /></div>
+                    <div className="flex items-center gap-1">부서<SortIcon field="dept_nm" /></div>
                   </TableHead>
                   <TableHead className="text-neutral-400">가입일</TableHead>
                   <TableHead className="text-neutral-400">최근 활동</TableHead>
@@ -669,22 +659,22 @@ export function GridManagement() {
               <TableBody>
                 {filteredAndSortedData.map(item => (
                   <TableRow
-                    key={item.id}
+                    key={item.user_id}
                     className="border-neutral-800 hover:bg-neutral-800/40 transition-colors"
                   >
                     <TableCell>
                       <input
                         type="checkbox"
-                        checked={selectedItems.has(item.id)}
-                        onChange={() => toggleSelectItem(item.id)}
+                        checked={selectedItems.has(item.user_id)}
+                        onChange={() => toggleSelectItem(item.user_id)}
                         className="w-4 h-4 rounded border-neutral-600 bg-neutral-950 accent-blue-500"
                       />
                     </TableCell>
-                    <TableCell className="text-neutral-50 font-medium">{item.name}</TableCell>
-                    <TableCell className="text-neutral-400 text-sm">{item.email}</TableCell>
-                    <TableCell>{getStatusBadge(item.status)}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.role}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.department}</TableCell>
+                    <TableCell className="text-neutral-50 font-medium">{item.user_name}</TableCell>
+                    <TableCell className="text-neutral-400 text-sm">{item.user_id}</TableCell>
+                    <TableCell>{getStatusBadge(item.stat)}</TableCell>
+                    <TableCell className="text-neutral-300 text-sm">{item.role_cd}</TableCell>
+                    <TableCell className="text-neutral-300 text-sm">{item.dept_nm}</TableCell>
                     <TableCell className="text-neutral-500 text-sm">{item.joinDate}</TableCell>
                     <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell>
                     <TableCell>
@@ -700,7 +690,7 @@ export function GridManagement() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-rose-400 focus:text-rose-400"
-                            onClick={() => deleteUser(item.id)}
+                            onClick={() => deleteUser(item.user_id)}
                           >
                             <TrashCan size={13} className="mr-2" />삭제
                           </DropdownMenuItem>

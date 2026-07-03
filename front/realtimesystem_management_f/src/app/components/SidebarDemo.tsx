@@ -45,6 +45,14 @@ import {
 } from "@carbon/icons-react";
 import { CampManagement } from "./CampManagement";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
+import { CampApprovalList } from "./CampApprovalList";
+import { ItemManagement } from "./ItemManagement";
+import { ItemCodeMappingManagement } from "./ItemCodeMappingManagement";
+import { FilterConditionManagement } from "./FilterConditionManagement";
+import { DataFormatManagement } from "./DataFormatManagement";
+import { SystemVarManagement } from "./SystemVarManagement";
+import { UserManagement } from "./UserManagement";
+
 
 // Softer spring animation curve
 const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
@@ -176,17 +184,27 @@ function SearchContainer({
   );
 }
 
+interface DetailSidebarProps {
+  activeSection: string;       // 대분류 (예: "dashboard")
+  // currentSubSection: string;   // 👈 현재 선택된 서브 메뉴 ID 상태 (예: "campaign-management")
+  // onSubSectionChange: (id: string) => void; // 👈 서브 메뉴가 클릭되었을 때 부모 상태를 바꿀 함수
+}
+
 interface MenuItem {
+  id: string;
   icon?: React.ReactNode; // menu item에 아이콘이 없을 수 있음
   label: string;
   hasDropdown?: boolean;
   isActive?: boolean;
   children?: MenuItem[];
+  onSectionChange?: (id: string) => void; // 👈 클릭 시 호출되는 함수
 }
 
 interface MenuSection {
   title: string;
   items: MenuItem[];
+  currentSubSection?: string;
+  onItemClick?: (id: string) => void;
 }
 
 interface SidebarContent {
@@ -200,12 +218,16 @@ function MenuItem({
   onToggle,
   onItemClick,
   isCollapsed,
+  isActive,
+  onSectionChange, // 👈 추가된 프롭스
 }: {
   item: MenuItem;
   isExpanded?: boolean;
   onToggle?: () => void;
   onItemClick?: () => void;
   isCollapsed?: boolean;
+  isActive?: boolean;
+  onSectionChange?: (id: string) => void; // 👈 추가된 프롭스
 }) {
   const handleClick = () => {
     if (item.hasDropdown && onToggle) {
@@ -305,11 +327,15 @@ function MenuSection({
   expandedItems,
   onToggleExpanded,
   isCollapsed,
+  currentSubSection,
+  onItemClick,
 }: {
   section: MenuSection;
   expandedItems: Set<string>;
   onToggleExpanded: (itemKey: string) => void;
   isCollapsed?: boolean;
+  currentSubSection?: string;
+  onItemClick?: (id: string) => void;
 }) {
   return (
     <div className="box-border content-stretch flex flex-col items-start justify-stretch p-0 relative shrink-0 w-full">
@@ -342,8 +368,11 @@ function MenuSection({
               isExpanded={isExpanded}
               onToggle={() => onToggleExpanded(itemKey)}
               onItemClick={() =>
-                console.log(`Clicked ${item.label}`)
+                console.log(`Clicked ${item.label} ,${item.id} `)
+                onSectionChange(item.id)
+                isActive = true;
               }
+              isActive={activeSection === item.id}
               isCollapsed={isCollapsed}
             />
             {isExpanded && item.children && !isCollapsed && (
@@ -380,6 +409,7 @@ function getSidebarContent(
               icon: (
                 <IbmLpa size={16} className="text-neutral-50" />
               ),
+              id : "campaign-management",
               label: "Campaign Management",
               isActive: true,
             },
@@ -387,57 +417,10 @@ function getSidebarContent(
               icon: (
                 <TaskApproved size={16} className="text-neutral-50" />
               ),
+              id : "campaign-approval-list",
               label: "Campaign Approval List",
               isActive: false,
             },
-            // {
-            //   icon: (
-            //     <Dashboard
-            //       size={16}
-            //       className="text-neutral-50"
-            //     />
-            //   ),
-            //   label: "Executive Summary",
-            //   hasDropdown: true,
-            //   children: [
-            //     { label: "Revenue Overview" },
-            //     { label: "Key Performance Indicators" },
-            //     { label: "Strategic Goals Progress" },
-            //     { label: "Department Highlights" },
-            //   ],
-            // },
-            // {
-            //   icon: (
-            //     <ChartBar
-            //       size={16}
-            //       className="text-neutral-50"
-            //     />
-            //   ),
-            //   label: "Operations Dashboard",
-            //   hasDropdown: true,
-            //   children: [
-            //     { label: "Project Timeline" },
-            //     { label: "Resource Allocation" },
-            //     { label: "Team Performance" },
-            //     { label: "Capacity Planning" },
-            //   ],
-            // },
-            // {
-            //   icon: (
-            //     <Analytics
-            //       size={16}
-            //       className="text-neutral-50"
-            //     />
-            //   ),
-            //   label: "Financial Dashboard",
-            //   hasDropdown: true,
-            //   children: [
-            //     { label: "Budget vs Actual" },
-            //     { label: "Cash Flow Analysis" },
-            //     { label: "Expense Breakdown" },
-            //     { label: "Profit & Loss Summary" },
-            //   ],
-            // },
           ],
         },
         {
@@ -447,6 +430,7 @@ function getSidebarContent(
               icon: (
                 <ItemUsage size={16} className="text-neutral-50" />
               ),
+              id: "item-management",
               label: "Item Management",
               hasDropdown: false
             },
@@ -454,6 +438,7 @@ function getSidebarContent(
               icon: (
                 <IbmEngineeringSystemsDesignRhapsody size={16} className="text-neutral-50" />
               ),
+              id: "item-code-mapping-management",
               label: "Item Code Mapping Management",
               hasDropdown: false
             },
@@ -461,6 +446,7 @@ function getSidebarContent(
               icon: (
                 <Filter size={16} className="text-neutral-50" />
               ),
+              id: "filter-condition-management",
               label: "Data Filter Condition Management",
               hasDropdown: false
             },
@@ -468,6 +454,7 @@ function getSidebarContent(
               icon: (
                 <DataBlob size={16} className="text-neutral-50" />
               ),
+              id: "data-format-management",
               label: "Data Format Management",
               hasDropdown: false
             },
@@ -480,549 +467,16 @@ function getSidebarContent(
               icon: (
                 <SettingsEdit  size={16} className="text-neutral-50" />
               ),
+              id: "system-variable-management",
               label: "System Variable Management",
               hasDropdown: false
             },{
               icon: (
                 <Group size={16} className="text-neutral-50" />
               ),
+              id: "user-management",
               label: "User Management",
               hasDropdown: false
-            },
-            // {
-            //   icon: (
-            //     <ChartBar
-            //       size={16}
-            //       className="text-neutral-50"
-            //     />
-            //   ),
-            //   label: "Performance Metrics",
-            //   hasDropdown: true,
-            //   children: [
-            //     { label: "Sales Conversion" },
-            //     { label: "Lead Response Time" },
-            //     { label: "Customer Lifetime Value" },
-            //     { label: "Churn Rate" },
-            //   ],
-            // },
-            // {
-            //   icon: (
-            //     <Analytics
-            //       size={16}
-            //       className="text-neutral-50"
-            //     />
-            //   ),
-            //   label: "Predictive Analytics",
-            //   hasDropdown: true,
-            //   children: [
-            //     { label: "Q4 Revenue Forecast" },
-            //     { label: "Resource Demand" },
-            //     { label: "Market Trends" },
-            //     { label: "Risk Assessment" },
-            //   ],
-            // },
-          ],
-        },
-      ],
-    },
-    tasks: {
-      title: "Tasks",
-      sections: [
-        {
-          title: "Quick Actions",
-          items: [
-            {
-              icon: (
-                <AddLarge
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "New task",
-            },
-            {
-              icon: (
-                <Filter size={16} className="text-neutral-50" />
-              ),
-              label: "Filter tasks",
-            },
-          ],
-        },
-        {
-          title: "My Tasks",
-          items: [
-            {
-              icon: (
-                <Time size={16} className="text-neutral-50" />
-              ),
-              label: "Due today",
-              hasDropdown: true,
-              children: [
-                { label: "Review design mockups" },
-                { label: "Update documentation" },
-                { label: "Test new feature" },
-              ],
-            },
-            {
-              icon: (
-                <InProgress
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "In progress",
-              hasDropdown: true,
-              children: [
-                { label: "Implement user auth" },
-                { label: "Database migration" },
-              ],
-            },
-            {
-              icon: (
-                <CheckmarkOutline
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Completed",
-              hasDropdown: true,
-              children: [
-                { label: "Fixed login bug" },
-                { label: "Updated dependencies" },
-                { label: "Code review completed" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "Other",
-          items: [
-            {
-              icon: (
-                <Flag size={16} className="text-neutral-50" />
-              ),
-              label: "Priority tasks",
-              hasDropdown: true,
-              children: [
-                { label: "Security update" },
-                { label: "Client presentation" },
-              ],
-            },
-            {
-              icon: (
-                <Archive
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Archived",
-            },
-          ],
-        },
-      ],
-    },
-    projects: {
-      title: "Projects",
-      sections: [
-        {
-          title: "Quick Actions",
-          items: [
-            {
-              icon: (
-                <AddLarge
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "New project",
-            },
-            {
-              icon: (
-                <Filter size={16} className="text-neutral-50" />
-              ),
-              label: "Filter projects",
-            },
-          ],
-        },
-        {
-          title: "Active Projects",
-          items: [
-            {
-              icon: (
-                <FolderOpen
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Web Application",
-              hasDropdown: true,
-              children: [
-                { label: "Frontend development" },
-                { label: "API integration" },
-                { label: "Testing & QA" },
-              ],
-            },
-            {
-              icon: (
-                <FolderOpen
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Mobile App",
-              hasDropdown: true,
-              children: [
-                { label: "UI/UX design" },
-                { label: "Native development" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "Other",
-          items: [
-            {
-              icon: (
-                <CheckmarkOutline
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Completed",
-            },
-            {
-              icon: (
-                <Archive
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Archived",
-            },
-          ],
-        },
-      ],
-    },
-    calendar: {
-      title: "Calendar",
-      sections: [
-        {
-          title: "Views",
-          items: [
-            {
-              icon: (
-                <View size={16} className="text-neutral-50" />
-              ),
-              label: "Month view",
-            },
-            {
-              icon: (
-                <CalendarIcon
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Week view",
-            },
-            {
-              icon: (
-                <Time size={16} className="text-neutral-50" />
-              ),
-              label: "Day view",
-            },
-          ],
-        },
-        {
-          title: "Events",
-          items: [
-            {
-              icon: (
-                <Time size={16} className="text-neutral-50" />
-              ),
-              label: "Today's events",
-              hasDropdown: true,
-              children: [
-                { label: "Team standup (9:00 AM)" },
-                { label: "Client call (2:00 PM)" },
-                { label: "Project review (4:00 PM)" },
-              ],
-            },
-            {
-              icon: (
-                <CalendarIcon
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Upcoming events",
-            },
-          ],
-        },
-        {
-          title: "Quick Actions",
-          items: [
-            {
-              icon: (
-                <AddLarge
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "New event",
-            },
-            {
-              icon: (
-                <Share size={16} className="text-neutral-50" />
-              ),
-              label: "Share calendar",
-            },
-          ],
-        },
-      ],
-    },
-    teams: {
-      title: "Teams",
-      sections: [
-        {
-          title: "My Teams",
-          items: [
-            {
-              icon: (
-                <Group size={16} className="text-neutral-50" />
-              ),
-              label: "Development Team",
-              hasDropdown: true,
-              children: [
-                { label: "John Doe (Lead)" },
-                { label: "Jane Smith" },
-                { label: "Mike Johnson" },
-              ],
-            },
-            {
-              icon: (
-                <Group size={16} className="text-neutral-50" />
-              ),
-              label: "Design Team",
-              hasDropdown: true,
-              children: [
-                { label: "Sarah Wilson" },
-                { label: "Tom Brown" },
-              ],
-            },
-          ],
-        },
-        {
-          title: "Quick Actions",
-          items: [
-            {
-              icon: (
-                <AddLarge
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Invite member",
-            },
-            {
-              icon: (
-                <UserMultiple
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Manage teams",
-            },
-          ],
-        },
-      ],
-    },
-    analytics: {
-      title: "Analytics",
-      sections: [
-        {
-          title: "Reports",
-          items: [
-            {
-              icon: (
-                <Report size={16} className="text-neutral-50" />
-              ),
-              label: "Performance report",
-            },
-            {
-              icon: (
-                <ChartBar
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Task completion",
-            },
-            {
-              icon: (
-                <Analytics
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Team productivity",
-            },
-          ],
-        },
-        {
-          title: "Insights",
-          items: [
-            {
-              icon: (
-                <StarFilled
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Key metrics",
-              hasDropdown: true,
-              children: [
-                { label: "Task completion metrics" },
-                { label: "Time tracking analysis" },
-                { label: "Team efficiency report" },
-                { label: "Performance benchmarks" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    files: {
-      title: "Files",
-      sections: [
-        {
-          title: "Quick Actions",
-          items: [
-            {
-              icon: (
-                <CloudUpload
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Upload file",
-            },
-            {
-              icon: (
-                <AddLarge
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "New folder",
-            },
-          ],
-        },
-        {
-          title: "Recent Files",
-          items: [
-            {
-              icon: (
-                <DocumentAdd
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Recent documents",
-              hasDropdown: true,
-              children: [
-                { label: "Project proposal.pdf" },
-                { label: "Meeting notes.docx" },
-                { label: "Design specs.figma" },
-              ],
-            },
-            {
-              icon: (
-                <Share size={16} className="text-neutral-50" />
-              ),
-              label: "Shared with me",
-            },
-          ],
-        },
-        {
-          title: "Organization",
-          items: [
-            {
-              icon: (
-                <Folder size={16} className="text-neutral-50" />
-              ),
-              label: "All folders",
-            },
-            {
-              icon: (
-                <Archive
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Archived files",
-            },
-          ],
-        },
-      ],
-    },
-    settings: {
-      title: "Settings",
-      sections: [
-        {
-          title: "Account",
-          items: [
-            {
-              icon: (
-                <User size={16} className="text-neutral-50" />
-              ),
-              label: "Profile settings",
-            },
-            {
-              icon: (
-                <Security
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Security",
-            },
-            {
-              icon: (
-                <Notification
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Notifications",
-            },
-          ],
-        },
-        {
-          title: "Workspace",
-          items: [
-            {
-              icon: (
-                <Settings
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Preferences",
-              hasDropdown: true,
-              children: [
-                { label: "Theme settings" },
-                { label: "Time zone" },
-                { label: "Default notifications" },
-              ],
-            },
-            {
-              icon: (
-                <Integration
-                  size={16}
-                  className="text-neutral-50"
-                />
-              ),
-              label: "Integrations",
             },
           ],
         },
@@ -1072,32 +526,12 @@ function IconNavigation({
       icon: <Dashboard size={16} />,
       label: "Dashboard",
     },
-    // { id: "tasks", icon: <Task size={16} />, label: "Tasks" },
-    // {
-    //   id: "projects",
-    //   icon: <Folder size={16} />,
-    //   label: "Projects",
-    // },
-    // {
-    //   id: "calendar",
-    //   icon: <Calendar size={16} />,
-    //   label: "Calendar",
-    // },
-    // {
-    //   id: "teams",
-    //   icon: <UserMultiple size={16} />,
-    //   label: "Teams",
-    // },
     {
       id: "analytics",
       icon: <Analytics size={16} />,
       label: "Analytics",
     },
-    // {
-    //   id: "files",
-    //   icon: <DocumentAdd size={16} />,
-    //   label: "Files",
-    // },
+
   ];
 
   return (
@@ -1219,12 +653,10 @@ function SectionTitle({
 
 function DetailSidebar({
   activeSection,
-}: {
-  activeSection: string;
-}) {
-  const [expandedItems, setExpandedItems] = useState<
-    Set<string>
-  >(new Set());
+  // currentSubSection,
+  // onSubSectionChange,
+}: DetailSidebarProps) {
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [isCollapsed, setIsCollapsed] = useState(false);
   const content = getSidebarContent(activeSection);
 
@@ -1245,9 +677,7 @@ function DetailSidebar({
   return (
     <div
       className={`bg-[#000000] box-border content-stretch flex flex-col gap-4 h-[800px] items-start justify-start overflow-visible p-4 relative rounded-r-2xl shrink-0 transition-all duration-500 ${
-        isCollapsed
-          ? "w-16 min-w-16 !px-0 justify-center"
-          : "w-80"
+        isCollapsed ? "w-16 min-w-16 !px-0 justify-center" : "w-80"
       }`}
       style={{ transitionTimingFunction: softSpringEasing }}
       data-name="Detail Sidebar"
@@ -1274,41 +704,232 @@ function DetailSidebar({
             expandedItems={expandedItems}
             onToggleExpanded={toggleExpanded}
             isCollapsed={isCollapsed}
+            // 👈 아래의 프롭스들을 MenuSection 내부로 전달하여 클릭 이벤트와 활성화 스타일을 처리합니다.
+            // currentSubSection={currentSubSection}
+            // onItemClick={onSubSectionChange}
           />
         ))}
       </div>
     </div>
   );
 }
+// function DetailSidebar({
+//   activeSection,
+//   onSectionChange,
+// }: {
+//   activeSection: string;
+//   onSectionChange: (section: string) => void;
+// }) {
+//   const [expandedItems, setExpandedItems] = useState<
+//     Set<string>
+//   >(new Set());
+//   const [isCollapsed, setIsCollapsed] = useState(false);
+//   const content = getSidebarContent(activeSection);
 
+//   const toggleExpanded = (itemKey: string) => {
+//     const newExpanded = new Set(expandedItems);
+//     if (newExpanded.has(itemKey)) {
+//       newExpanded.delete(itemKey);
+//     } else {
+//       newExpanded.add(itemKey);
+//     }
+//     setExpandedItems(newExpanded);
+//   };
+
+//   const toggleCollapse = () => {
+//     setIsCollapsed(!isCollapsed);
+//   };
+
+//   return (
+//     <div
+//       className={`bg-[#000000] box-border content-stretch flex flex-col gap-4 h-[800px] items-start justify-start overflow-visible p-4 relative rounded-r-2xl shrink-0 transition-all duration-500 ${
+//         isCollapsed
+//           ? "w-16 min-w-16 !px-0 justify-center"
+//           : "w-80"
+//       }`}
+//       style={{ transitionTimingFunction: softSpringEasing }}
+//       data-name="Detail Sidebar"
+//     >
+//       <SectionTitle
+//         title={content.title}
+//         onToggleCollapse={toggleCollapse}
+//         isCollapsed={isCollapsed}
+//       />
+//       <SearchContainer isCollapsed={isCollapsed} />
+
+//       <div
+//         className={`basis-0 box-border content-stretch flex flex-col grow min-h-px min-w-10 p-0 relative shrink-0 w-full overflow-y-auto transition-all duration-500 ${
+//           isCollapsed
+//             ? "gap-2 items-center justify-start"
+//             : "gap-4 items-start justify-start"
+//         }`}
+//         style={{ transitionTimingFunction: softSpringEasing }}
+//       >
+//         {content.sections.map((section, index) => (
+//           <MenuSection
+//             key={`${activeSection}-${index}`}
+//             section={section}
+//             expandedItems={expandedItems}
+//             onToggleExpanded={toggleExpanded}
+//             isCollapsed={isCollapsed}
+//           />
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
 function TwoLevelSidebar({
   activeSection,
   onSectionChange,
+  // currentSubSection,
+  // onSubSectionChange,
 }: {
   activeSection: string;
   onSectionChange: (s: string) => void;
+  // currentSubSection: string; // 👈 타입 정의 추가
+  // onSubSectionChange: (subSection: string) => void; // 👈 타입 정의 추가
 }) {
   return (
     <div
       className="flex flex-row"
       data-name="Two Level Sidebar"
     >
+      {/* 1단계 대분류 아이콘 내비게이션 */}
       <IconNavigation
         activeSection={activeSection}
         onSectionChange={onSectionChange}
       />
-      <DetailSidebar activeSection={activeSection} />
+      
+      {/* 2단계 상세 서브 메뉴 사이드바 (주석 해제 후 프롭스 전달) */}
+      <DetailSidebar 
+        activeSection={activeSection} 
+        // currentSubSection={currentSubSection} // 👈 추가
+        // onSubSectionChange={onSubSectionChange} // 👈 추가
+      />
     </div>
   );
 }
+// function TwoLevelSidebar({
+//   activeSection,
+//   onSectionChange,
+// }: {
+//   activeSection: string;
+//   onSectionChange: (s: string) => void;
+// }) {
+//   return (
+//     <div
+//       className="flex flex-row"
+//       data-name="Two Level Sidebar"
+//     >
+//       <IconNavigation
+//         activeSection={activeSection}
+//         onSectionChange={onSectionChange}
+//       />
+//       {/* <DetailSidebar 
+//         activeSection={activeSection} 
+//       /> */}
+//     </div>
+//   );
+// }
 
 export function Frame760() {
   const [activeSection, setActiveSection] = useState("dashboard");
-
+  const [activeSubSection, setActiveSubSection] = useState("campaign-management"); // 서브분류
+  // 현재 activeSection 상태에 맞는 메인 화면 콘텐츠를 리턴합니다.
+  const renderContent = () => {
+    switch (activeSection) {
+      case "analytics":
+        return <AnalyticsDashboard />;
+      case "dashboard":
+        return <CampManagement />;
+      default:
+        return <CampManagement />;
+    }
+  };
+  const renderSubContent = () => {
+    switch (activeSubSection) {
+      case "campaign-management":
+        return <CampManagement />;
+      case "campaign-approval":
+        return <CampApprovalList />; // 👈 임의의 서브 화면 컴포넌트들
+      case "item-management":
+        return <ItemManagement />;
+      case "item-code-mapping-management":
+        return <ItemCodeMappingManagement />;
+      case "filter-condition-management":
+        return <FilterConditionManagement />;
+      case "data-format-management":
+        return <DataFormatManagement />;
+      case "system-variable-management":
+        return <SystemVarManagement />;
+      case "user-management":
+        return <UserManagement />;
+      default:
+        return <CampManagement />;
+    }
+  }
   return (
     <div className="bg-[#1a1a1a] box-border content-stretch flex flex-row gap-0 items-start justify-center p-0 relative size-full min-h-screen">
       <TwoLevelSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       {activeSection === "analytics" ? <AnalyticsDashboard /> : <CampManagement />}
+      {/* {renderContent()} */}
     </div>
   );
 }
+
+// export function Frame760() {
+//   const [activeSection, setActiveSection] = useState("dashboard");
+//   // 초기 상태값을 실제 매핑되는 case 코드("campaign-management")로 유지합니다.
+//   const [currentSubSection, setCurrentSubSection] = useState("campaign-management");
+
+//   // 대분류(activeSection)가 아닌 서브 섹션(currentSubSection) 상태에 맞게 메인 화면을 리턴합니다.
+//   const renderContent = () => {
+//     console.log(currentSubSection)
+//     switch (currentSubSection) {
+//       case "analytics":
+//         return <AnalyticsDashboard />;
+//       case "campaign-management":
+//         return <CampManagement />;
+//       case "campaign-approval":
+//         return <CampApprovalList />; 
+//       case "item-management":
+//         return <ItemManagement />;
+//       case "item-code-mapping-management":
+//         return <ItemCodeMappingManagement />;
+//       case "filter-condition-management":
+//         return <FilterConditionManagement />;
+//       case "data-format-management":
+//         return <DataFormatManagement />;
+//       case "system-variable-management":
+//         return <SystemVarManagement />;
+//       case "user-management":
+//         return <UserManagement />;
+//       default:
+//         // 기본값으로 캠페인 관리 화면을 보여줍니다.
+//         return <CampManagement />;
+//     }
+//   };
+
+//   return (
+//     <div className="bg-[#1a1a1a] box-border content-stretch flex flex-row gap-0 items-start justify-center p-0 relative size-full min-h-screen">
+//       {/* 
+//         사이드바 컴포넌트에 세부 메뉴 상태(currentSubSection)와 
+//         이를 변경할 수 있는 핸들러(setCurrentSubSection)를 프롭스로 넘겨줍니다. 
+//       */}
+//       <TwoLevelSidebar 
+//         activeSection={activeSection} 
+//         onSectionChange={(section) => {
+//           setActiveSection(section);
+//           // 💡 UX 팁: 대분류가 바뀔 때 해당 대분류의 첫 번째 서브메뉴가 자동으로 선택되도록 초기화해 주면 좋습니다.
+//           if (section === "dashboard") setCurrentSubSection("campaign-management");
+//           if (section === "analytics") setCurrentSubSection("analytics");
+//         }}
+//         currentSubSection={currentSubSection}
+//         onSubSectionChange={setCurrentSubSection}
+//       />
+      
+//       {/* 서브 섹션 기준 분기 처리된 메인 콘텐츠 화면 */}
+//       {renderContent()}
+//     </div>
+//   );
+// }

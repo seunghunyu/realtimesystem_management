@@ -11,18 +11,14 @@ import java.time.LocalDateTime;
 public class FilterResponse {
     private String userId;
     private String userName;
-    private String role;
     private String stat;
-    private String deptCd;
     private LocalDateTime createdAt;
 
     public static FilterResponse from(Users users){
         return FilterResponse.builder()
                 .userId(users.getUserId())
                 .userName(users.getUserName())
-                .role(users.getRole())
                 .stat(users.getStat())
-                .deptCd(users.getDeptCd())
                 .createdAt(users.getCreatedAt())
                 .build();
     }

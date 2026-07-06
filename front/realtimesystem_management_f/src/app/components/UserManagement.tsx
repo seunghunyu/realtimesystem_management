@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Badge } from "./ui/badge";
+import { deptService, roleService } from "../services/codevalService";
 
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
@@ -484,6 +485,27 @@ export function UserManagement() {
   const addUser = (item: DataItem) => {
     setUsers(prev => [item, ...prev]);
   };
+
+  const getRoles = async () => {
+    await roleService.list().then(res => {
+      if (res.ok && res.data) {
+        console.log("Roles:", res.data);
+      } else {
+        console.error("Failed to fetch roles:");
+      }
+    });
+  };
+
+  const getDepts = async () => {
+    await deptService.list().then(res => {
+      if (res.ok && res.data) {
+        console.log("Departments:", res.data);
+      } else {
+        console.error("Failed to fetch departments:");
+      }
+    });
+  };
+
 
   const getStatusBadge = (stat: string) => {
     switch (stat) {

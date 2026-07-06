@@ -13,10 +13,12 @@ public class UserRequest {
     @NotBlank
     private String userName;
 
-    private String role;
+    private String roleCd;
 
     private String stat;
 
     private String deptCd;
+
+
 
 }

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -58,5 +59,10 @@ public class DetpsServiceImpl implements DeptsService {
         Depts depts = deptRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEPT_NOT_FOUND));
         return DeptsResponse.from(depts);
+    }
+
+    @Override
+    public List<Depts> findAll() {
+        return deptRepository.findAll();
     }
 }

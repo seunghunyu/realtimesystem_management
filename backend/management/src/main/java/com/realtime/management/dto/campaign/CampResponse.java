@@ -11,18 +11,14 @@ import java.time.LocalDateTime;
 public class CampResponse {
     private String userId;
     private String userName;
-    private String role;
     private String stat;
-    private String deptCd;
     private LocalDateTime createdAt;
 
     public static CampResponse from(Users users){
         return CampResponse.builder()
                 .userId(users.getUserId())
                 .userName(users.getUserName())
-                .role(users.getRole())
                 .stat(users.getStat())
-                .deptCd(users.getDeptCd())
                 .createdAt(users.getCreatedAt())
                 .build();
     }

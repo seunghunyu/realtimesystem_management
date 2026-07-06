@@ -1,14 +1,17 @@
-package com.realtime.management.controller;
+package com.realtime.management.controller.api;
 
 import com.realtime.management.dto.user.UserRequest;
 import com.realtime.management.dto.user.UserResponse;
+import com.realtime.management.entity.Users;
 import com.realtime.management.service.users.UsersService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UsersController {
 
@@ -31,8 +34,17 @@ public class UsersController {
     }
 
     @GetMapping("/{userId}")
-    public UserResponse save(@PathVariable String userId){
+    public UserResponse findById(@PathVariable String userId){
         return service.findById(userId);
     }
 
+    @GetMapping("/list")
+    public List<UserResponse> findAll(){
+        List<Users> usersList = service.findAll();
+
+        // Stream을 사용하여 Users -> UserResponse로 변환
+        return usersList.stream()
+                .map(UserResponse::from) // 또는 매퍼 클래스/생성자 활용
+                .toList(); // Java 16+ 기준 (하위 버전은 .collect(Collectors.toList()))
+    }
 }

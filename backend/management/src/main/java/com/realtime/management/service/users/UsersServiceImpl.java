@@ -3,16 +3,19 @@ package com.realtime.management.service.users;
 import com.realtime.management.dto.user.UserRequest;
 import com.realtime.management.dto.user.UserResponse;
 import com.realtime.management.entity.Depts;
+import com.realtime.management.entity.Roles;
 import com.realtime.management.entity.Users;
 import com.realtime.management.exception.BusinessException;
 import com.realtime.management.exception.ErrorCode;
 import com.realtime.management.repository.DeptsRepository;
+import com.realtime.management.repository.RolesRepository;
 import com.realtime.management.repository.UsersRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,19 +23,28 @@ import java.time.LocalDateTime;
 public class UsersServiceImpl implements UsersService {
     private final UsersRepository repository;
     private final DeptsRepository deptRepository;
+    private final RolesRepository rolesRepository;
 
     @Override
     public UserResponse save(UserRequest request) {
         if(repository.existsById(request.getUserId())){
             throw new BusinessException(ErrorCode.USER_ALREADY_EXISTS);
         }
+        // 2. 부서(Depts)와 권한(Roles) 정보 DB에서 조회하기
+        // (만약 없는 코드라면 예외를 던지도록 .orElseThrow() 처리)
+        Depts depts = deptRepository.findById(request.getDeptCd())
+                .orElseThrow(() -> new BusinessException(ErrorCode.DEPT_NOT_FOUND));
+
+        Roles roles = rolesRepository.findById(request.getRoleCd())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
+
         Users users = Users.builder()
                 .userId(request.getUserId())
                 .userName(request.getUserName())
-                .role(request.getRole())
                 .stat(request.getStat())
-                .deptCd(request.getDeptCd())
                 .createdAt(LocalDateTime.now())
+                .roles(roles)
+                .depts(depts)
                 .build();
         repository.save(users);
 
@@ -45,9 +57,11 @@ public class UsersServiceImpl implements UsersService {
         Users users = repository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         Depts depts = deptRepository.findById(request.getDeptCd())
-                .orElseThrow(() -> new BusinessException(ErrorCode.DEPT_NOT_FOUND)); // (부서 없을 때 예외처리 추가)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DEPT_NOT_FOUND));
+        Roles roles = rolesRepository.findById(request.getRoleCd())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
 
-        users.update(request.getUserName(), request.getRole(), request.getStat(), depts);
+        users.update(request.getUserName(), request.getStat(), depts, roles);
 
         return UserResponse.from(users);
     }
@@ -65,5 +79,10 @@ public class UsersServiceImpl implements UsersService {
         Users users = repository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         return UserResponse.from(users);
+    }
+
+    @Override
+    public List<Users> findAll() {
+        return repository.findAll();
     }
 }

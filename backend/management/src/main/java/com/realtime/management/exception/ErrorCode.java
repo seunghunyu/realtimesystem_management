@@ -15,7 +15,11 @@ public enum ErrorCode {
     
     // Depts
     DEPT_NOT_FOUND(HttpStatus.NOT_FOUND, "D001", "부서를 찾을 수 없습니다."),
-    DEPT_ALREADY_EXISTS(HttpStatus.CONFLICT, "D002", "이미 존재하는 부서입니다.");
+    DEPT_ALREADY_EXISTS(HttpStatus.CONFLICT, "D002", "이미 존재하는 부서입니다."),
+
+    // Roless
+    ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "역할을 찾을 수 없습니다."),
+    ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 존재하는 역할입니다.");
     
     private final HttpStatus status;
     private final String code;

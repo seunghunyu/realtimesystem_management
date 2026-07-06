@@ -20,13 +20,14 @@ public class Users {
     @Column(name = "user_name")
     private String userName;
 
-    private String role;
-
     @Column(name = "stat")
     private String stat;
 
-    @Column(name = "dept_cd")
-    private String deptCd;
+//    @Column(name = "dept_cd")
+//    private String deptCd;
+//
+//    @Column(name = "role_cd")
+//    private String roleCd;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -36,10 +37,14 @@ public class Users {
     @JoinColumn(name = "dept_cd")     // 데이터베이스의 실제 FK 컬럼명
     private Depts depts;
 
-    public void update(String userName, String role, String stat, Depts depts){
+    @ManyToOne(fetch = FetchType.LAZY) // 지연 로딩 설정으로 성능 최적화
+    @JoinColumn(name = "role_cd")     // 데이터베이스의 실제 FK 컬럼명
+    private Roles roles;
+
+    public void update(String userName, String stat, Depts depts, Roles roles){
         this.userName = userName;
-        this.role = role;
         this.stat = stat;
         this.depts = depts;
+        this.roles = roles;
     }
 }

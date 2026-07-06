@@ -14,24 +14,26 @@ import { apiClient, type ApiResult } from "../lib/apiClient";
 // ── payload / response types ─────────────────────────────────────────────────
 
 export interface UserDto {
-  user_id: string;
-  user_name: string;
+  userId: string;
+  userName: string;
   stat: "active" | "inactive" | "pending";
-  role_cd: string;
-  dept_nm: string;
+  roleCd: string;
+  roleNm: string;
+  deptCd: string;
+  deptNm: string;
   address?: string;
-  joinDate: string;
+  createdAt: string;
   lastActive: string;
 }
 
 /** Body sent when registering a new user */
 export interface CreateUserPayload {
-  user_id: string;
-  user_name: string;
+  userId: string;
+  userName: string;
   /** plain-text; the server must hash it */
   password: string;
-  role_cd: string;
-  dept_nm: string;
+  roleCd: string;
+  deptNm: string;
   address?: string;
 }
 
@@ -51,7 +53,7 @@ export const userService = {
    * GET /api/users
    */
   list(): Promise<ApiResult<UserDto[]>> {
-    return apiClient.get<UserDto[]>("/api/users");
+    return apiClient.get<UserDto[]>("/api/users/list");
   },
 
   /**

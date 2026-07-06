@@ -5,12 +5,19 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class CorsConfig implements WebMvcConfigurer {
+public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:5173")
                 .allowedMethods("*")
                 .allowedHeaders("*");
+
+//        // 관리자 API
+//        registry.addMapping("/admin/**")
+//                .allowedOrigins("http://localhost:3000")
+//                .allowedMethods("*");
+//                .allowedMethods("GET", "POST");
     }
+
 }

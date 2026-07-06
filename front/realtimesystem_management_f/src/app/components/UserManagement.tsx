@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { userService } from "../services/userService";
 import {
   Search,
@@ -42,14 +42,26 @@ import { deptService, roleService } from "../services/codevalService";
 
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
-  user_id: string;
-  user_name: string;
+  userId: string;
+  userName: string;
   stat: "active" | "inactive" | "pending";
-  role_cd: string;
-  dept_nm: string;
-  joinDate: string;
+  roleCd: string;
+  roleNm: string;
+  deptCd: string;
+  deptNm: string;
+  createdAt: string;
   lastActive: string;
   address?: string;
+}
+
+interface DeptItem{
+  deptCd: string;
+  deptNm: string;
+}
+
+interface RoleItem{
+  roleCd: string;
+  roleNm: string;
 }
 
 interface FormState {
@@ -59,6 +71,8 @@ interface FormState {
   confirmPassword: string;
   address: string;
   role_cd: string;
+  role_nm: string;
+  dept_cd: string;
   dept_nm: string;
 }
 
@@ -69,22 +83,24 @@ interface FormErrors {
   confirmPassword?: string;
   address?: string;
   role_cd?: string;
+  role_nm?: string;
+  dept_cd?: string; 
   dept_nm?: string;
 }
 
 // ── initial data ───────────────────────────────────────────────
-const INITIAL_DATA: DataItem[] = [
-  { user_id: "kim.chulsoo@company.com", user_name: "김철수",  stat: "active", role_cd: "개발자", dept_nm: "엔지니어링", joinDate: "2024-01-15", lastActive: "2분 전" },
-  { user_id: "lee.younghee@company.com", user_name: "이영희",  stat: "active", role_cd: "디자이너", dept_nm: "디자인", joinDate: "2024-02-20", lastActive: "5분 전" },
-  { user_id: "park.jimin@company.com", user_name: "박지민",  stat: "pending", role_cd: "마케터", dept_nm: "마케팅", joinDate: "2024-03-10", lastActive: "1시간 전" },
-];
+// const INITIAL_DATA: DataItem[] = [
+//   { user_id: "kim.chulsoo@company.com", user_name: "김철수",  stat: "active", role_cd: "개발자", dept_nm: "엔지니어링", joinDate: "2024-01-15", lastActive: "2분 전" },
+//   { user_id: "lee.younghee@company.com", user_name: "이영희",  stat: "active", role_cd: "디자이너", dept_nm: "디자인", joinDate: "2024-02-20", lastActive: "5분 전" },
+//   { user_id: "park.jimin@company.com", user_name: "박지민",  stat: "pending", role_cd: "마케터", dept_nm: "마케팅", joinDate: "2024-03-10", lastActive: "1시간 전" },
+// ];
 
-const ROLES = ["개발자", "디자이너", "마케터", "프로젝트 매니저", "데이터 분석가", "UX 디자이너", "제품 매니저", "기타"];
-const DEPARTMENTS = ["엔지니어링", "디자인", "마케팅", "애널리틱스", "제품", "기타"];
+// const ROLES = ["개발자", "디자이너", "마케터", "프로젝트 매니저", "데이터 분석가", "UX 디자이너", "제품 매니저", "기타"];
+// const DEPARTMENTS = ["엔지니어링", "디자인", "마케팅", "애널리틱스", "제품", "기타"];
 
 const EMPTY_FORM: FormState = {
   user_name: "", user_id: "", password: "", confirmPassword: "",
-  address: "", role_cd: "", dept_nm: "",
+  address: "", role_cd: "", role_nm: "", dept_cd: "", dept_nm: "",
 };
 
 // ── helpers ────────────────────────────────────────────────────
@@ -144,9 +160,13 @@ function Field({ label, required, error, children }: {
 function RegistrationModal({
   onClose,
   onSubmit,
+  departments,
+  roles,
 }: {
   onClose: () => void;
   onSubmit: (item: DataItem) => void;
+  departments: DeptItem[];
+  roles: RoleItem[];
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -172,11 +192,11 @@ function RegistrationModal({
 
     // ── REST 요청: POST /api/users ──────────────────────────
     const result = await userService.create({
-      user_id: form.user_id.trim(),
-      user_name: form.user_name.trim(),
+      userId: form.user_id.trim(),
+      userName: form.user_name.trim(),
       password: form.password,
-      role_cd: form.role_cd,
-      dept_nm: form.dept_nm,
+      roleCd: form.role_cd,
+      deptNm: form.dept_nm,
       address: form.address.trim(),
     });
     // ───────────────────────────────────────────────────────
@@ -188,23 +208,27 @@ function RegistrationModal({
     const newItem: DataItem =
       result.ok && result.data
         ? {
-            user_id: result.data.user_id,
-            user_name: result.data.user_name,
+            userId: result.data.userId,
+            userName: result.data.userName,
             stat: result.data.stat ?? "pending",
-            role_cd: result.data.role_cd,
-            dept_nm: result.data.dept_nm,
+            roleCd: result.data.roleCd,
+            roleNm: result.data.roleNm,
+            deptCd: result.data.deptCd,
+            deptNm: result.data.deptNm,
             address: result.data.address,
-            joinDate: result.data.joinDate ?? today(),
+            createdAt: result.data.createdAt ?? today(),
             lastActive: result.data.lastActive ?? "방금 전",
           }
         : {
-            user_id: form.user_id.trim(),
-            user_name: form.user_name.trim(),
+            userId: form.user_id.trim(),
+            userName: form.user_name.trim(),
             stat: "pending",
-            role_cd: form.role_cd,
-            dept_nm: form.dept_nm,
+            roleCd: form.role_cd,
+            roleNm: form.role_nm,
+            deptCd: form.dept_cd,
+            deptNm: form.dept_nm,
             address: form.address.trim(),
-            joinDate: today(),
+            createdAt: today(),
             lastActive: "방금 전",
           };
 
@@ -347,7 +371,7 @@ function RegistrationModal({
                 <SelectValue placeholder="역할 선택" />
               </SelectTrigger>
               <SelectContent>
-                {ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                {roles.map(r => <SelectItem key={r.roleCd} value={r.roleNm}>{r.roleNm}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>
@@ -358,7 +382,7 @@ function RegistrationModal({
                 <SelectValue placeholder="부서 선택" />
               </SelectTrigger>
               <SelectContent>
-                {DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>
@@ -414,24 +438,27 @@ type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
 export function UserManagement() {
-  const [users, setUsers] = useState<DataItem[]>(INITIAL_DATA);
+  const [users, setUsers] = useState<DataItem[]>([]);
+  const [departments, setDepartments] = useState<DeptItem[]>([]);
+  const [roles, setRoles] = useState<RoleItem[]>([]);
+
   const [showModal, setShowModal] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>("user_name");
+  const [sortField, setSortField] = useState<SortField>("userName");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const filteredAndSortedData = useMemo(() => {
     const filtered = users.filter(item => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = item.user_name.toLowerCase().includes(q) ||
-        item.user_id.toLowerCase().includes(q) ||
-        item.role_cd.toLowerCase().includes(q);
+      const matchesSearch = item.userName.toLowerCase().includes(q) ||
+        item.userId.toLowerCase().includes(q) ||
+        item.roleCd.toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || item.stat === statusFilter;
-      const matchesDept = departmentFilter === "all" || item.dept_nm === departmentFilter;
+      const matchesDept = departmentFilter === "all" || item.deptNm === departmentFilter;
       return matchesSearch && matchesStatus && matchesDept;
     });
 
@@ -445,7 +472,8 @@ export function UserManagement() {
     return filtered;
   }, [users, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
 
-  const departments = Array.from(new Set(users.map(u => u.dept_nm)));
+  // const departments = Array.from(new Set(users.map(u => u.dept_nm)));
+  // const roles = Array.from(new Set(users.map(u => u.role_cd)));
 
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortDirection(d => d === "asc" ? "desc" : "asc");
@@ -454,7 +482,7 @@ export function UserManagement() {
 
   const toggleSelectAll = () => {
     if (selectedItems.size === filteredAndSortedData.length) setSelectedItems(new Set());
-    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.user_id)));
+    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.userId)));
   };
 
   const toggleSelectItem = (id: string) => {
@@ -468,7 +496,7 @@ export function UserManagement() {
   const deleteSelected = async () => {
     const ids = Array.from(selectedItems);
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => !selectedItems.has(u.user_id)));
+    setUsers(prev => prev.filter(u => !selectedItems.has(u.userId)));
     setSelectedItems(new Set());
     // REST 요청: DELETE /api/users/:id (병렬)
     await userService.removeMany(ids);
@@ -476,7 +504,7 @@ export function UserManagement() {
 
   const deleteUser = async (id: string) => {
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => u.user_id !== id));
+    setUsers(prev => prev.filter(u => u.userId !== id));
     setSelectedItems(prev => { const n = new Set(prev); n.delete(id); return n; });
     // REST 요청: DELETE /api/users/:id
     await userService.remove(id);
@@ -486,10 +514,22 @@ export function UserManagement() {
     setUsers(prev => [item, ...prev]);
   };
 
+  const getUsers = async () => {
+    await userService.list().then(res => {
+      if (res.ok && res.data) {
+        console.log("Users:", res.data);
+        setUsers(res.data);
+      } else {
+        console.error("Failed to fetch users:");
+      }
+    });
+  };
+
   const getRoles = async () => {
     await roleService.list().then(res => {
       if (res.ok && res.data) {
         console.log("Roles:", res.data);
+        setRoles(res.data);
       } else {
         console.error("Failed to fetch roles:");
       }
@@ -500,6 +540,7 @@ export function UserManagement() {
     await deptService.list().then(res => {
       if (res.ok && res.data) {
         console.log("Departments:", res.data);
+        setDepartments(res.data);
       } else {
         console.error("Failed to fetch departments:");
       }
@@ -521,12 +562,22 @@ export function UserManagement() {
       ? (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)
       : null;
 
+  useEffect( () => {
+    getRoles(); //역할 정보
+    getDepts(); //부서 정보
+    getUsers(); //사용자 정보
+  }, []); // []로 두면 컴포넌트가 처음 켜질 때 한번만 실행
+
+
+
   return (
     <>
       {showModal && (
         <RegistrationModal
           onClose={() => setShowModal(false)}
           onSubmit={addUser}
+          departments={departments} 
+          roles={roles}
         />
       )}
 
@@ -576,7 +627,7 @@ export function UserManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">모든 부서</SelectItem>
-                    {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                    {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
                   </SelectContent>
                 </Select>
 
@@ -588,7 +639,7 @@ export function UserManagement() {
                   새로운 항목
                 </button>
 
-                <DropdownMenu>
+                {/* <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="h-9 px-3 rounded-lg border border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-neutral-50 hover:bg-neutral-900 transition-colors flex items-center">
                       <OverflowMenuHorizontal size={16} />
@@ -602,7 +653,7 @@ export function UserManagement() {
                       <Renew size={14} className="mr-2" />초기화
                     </DropdownMenuItem>
                   </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu> */}
               </div>
             </div>
 
@@ -663,42 +714,42 @@ export function UserManagement() {
                   <TableHead className="text-neutral-400">상태</TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("role_cd")}
+                    onClick={() => handleSort("roleCd")}
                   >
-                    <div className="flex items-center gap-1">역할<SortIcon field="role_cd" /></div>
+                    <div className="flex items-center gap-1">역할<SortIcon field="roleCd" /></div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("dept_nm")}
+                    onClick={() => handleSort("deptNm")}
                   >
-                    <div className="flex items-center gap-1">부서<SortIcon field="dept_nm" /></div>
+                    <div className="flex items-center gap-1">부서<SortIcon field="deptNm" /></div>
                   </TableHead>
                   <TableHead className="text-neutral-400">가입일</TableHead>
-                  <TableHead className="text-neutral-400">최근 활동</TableHead>
+                  {/* <TableHead className="text-neutral-400">최근 활동</TableHead> */}
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAndSortedData.map(item => (
                   <TableRow
-                    key={item.user_id}
+                    key={item.userId}
                     className="border-neutral-800 hover:bg-neutral-800/40 transition-colors"
                   >
                     <TableCell>
                       <input
                         type="checkbox"
-                        checked={selectedItems.has(item.user_id)}
-                        onChange={() => toggleSelectItem(item.user_id)}
+                        checked={selectedItems.has(item.userId)}
+                        onChange={() => toggleSelectItem(item.userId)}
                         className="w-4 h-4 rounded border-neutral-600 bg-neutral-950 accent-blue-500"
                       />
                     </TableCell>
-                    <TableCell className="text-neutral-50 font-medium">{item.user_name}</TableCell>
-                    <TableCell className="text-neutral-400 text-sm">{item.user_id}</TableCell>
+                    <TableCell className="text-neutral-50 font-medium">{item.userName}</TableCell>
+                    <TableCell className="text-neutral-400 text-sm">{item.userId}</TableCell>
                     <TableCell>{getStatusBadge(item.stat)}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.role_cd}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.dept_nm}</TableCell>
-                    <TableCell className="text-neutral-500 text-sm">{item.joinDate}</TableCell>
-                    <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell>
+                    <TableCell className="text-neutral-300 text-sm">{item.roleCd}</TableCell>
+                    <TableCell className="text-neutral-300 text-sm">{item.deptNm}</TableCell>
+                    <TableCell className="text-neutral-500 text-sm">{item.createdAt}</TableCell>
+                    {/* <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell> */}
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -712,7 +763,7 @@ export function UserManagement() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-rose-400 focus:text-rose-400"
-                            onClick={() => deleteUser(item.user_id)}
+                            onClick={() => deleteUser(item.userId)}
                           >
                             <TrashCan size={13} className="mr-2" />삭제
                           </DropdownMenuItem>

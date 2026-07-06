@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { act, useState } from "react";
 import svgPaths from "../imports/svg-svkvdgwod6";
 import {
   Search,
@@ -197,7 +197,7 @@ interface MenuItem {
   hasDropdown?: boolean;
   isActive?: boolean;
   children?: MenuItem[];
-  onSectionChange?: (id: string) => void; // 👈 클릭 시 호출되는 함수
+  // onSectionChange?: (id: string) => void; // 👈 클릭 시 호출되는 함수
 }
 
 interface MenuSection {
@@ -219,7 +219,7 @@ function MenuItem({
   onItemClick,
   isCollapsed,
   isActive,
-  onSectionChange, // 👈 추가된 프롭스
+  // onSectionChange, // 👈 추가된 프롭스
 }: {
   item: MenuItem;
   isExpanded?: boolean;
@@ -227,7 +227,7 @@ function MenuItem({
   onItemClick?: () => void;
   isCollapsed?: boolean;
   isActive?: boolean;
-  onSectionChange?: (id: string) => void; // 👈 추가된 프롭스
+  // onSectionChange?: (id: string) => void; // 👈 추가된 프롭스
 }) {
   const handleClick = () => {
     if (item.hasDropdown && onToggle) {
@@ -246,7 +246,7 @@ function MenuItem({
     >
       <div
         className={`select-none rounded-lg cursor-pointer transition-all duration-500 flex items-center relative my-0.5 ${
-          item.isActive
+          isActive
             ? "bg-neutral-900"
             : "hover:bg-neutral-900"
         } ${
@@ -324,18 +324,20 @@ function SubMenuItem({
 
 function MenuSection({
   section,
+  activeSubSection,
   expandedItems,
   onToggleExpanded,
   isCollapsed,
-  currentSubSection,
   onItemClick,
+  setSubSectionChange,
 }: {
   section: MenuSection;
+  activeSubSection: string;
   expandedItems: Set<string>;
   onToggleExpanded: (itemKey: string) => void;
   isCollapsed?: boolean;
-  currentSubSection?: string;
   onItemClick?: (id: string) => void;
+  setSubSectionChange?: (id: string) => void; // 👈 추가된 프롭스
 }) {
   return (
     <div className="box-border content-stretch flex flex-col items-start justify-stretch p-0 relative shrink-0 w-full">
@@ -367,12 +369,20 @@ function MenuSection({
               item={item}
               isExpanded={isExpanded}
               onToggle={() => onToggleExpanded(itemKey)}
-              onItemClick={() =>
-                console.log(`Clicked ${item.label} ,${item.id} `)
-                onSectionChange(item.id)
-                isActive = true;
-              }
-              isActive={activeSection === item.id}
+              // onItemClick={() =>
+              //   console.log(`Clicked ${item.label} ,${item.id} `)
+              // }
+              // 1. 중괄호 { }를 열고 그 안에서 함수들을 실행합니다.
+              onItemClick={() => {
+                console.log(`Clicked ${item.label} ,${item.id}`);
+                
+                // 2. MenuSection이 부모에게서 받은 함수를 여기서 호출합니다.
+                if (setSubSectionChange) {
+                  console.log(`setSubSectionChange = ${item.id}`);
+                  setSubSectionChange(item.id);
+                }
+              }} // 👈 여기서 중괄호와 소괄호를 닫습니다.
+              isActive={activeSubSection === item.id}
               isCollapsed={isCollapsed}
             />
             {isExpanded && item.children && !isCollapsed && (
@@ -478,6 +488,16 @@ function getSidebarContent(
               label: "User Management",
               hasDropdown: false
             },
+          ],
+        },
+      ],
+    },analytics: {
+      title: "Analytics",
+      sections: [
+        {
+          title: "Insights",
+          items: [
+            
           ],
         },
       ],
@@ -651,78 +671,10 @@ function SectionTitle({
   );
 }
 
-function DetailSidebar({
-  activeSection,
-  // currentSubSection,
-  // onSubSectionChange,
-}: DetailSidebarProps) {
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const content = getSidebarContent(activeSection);
-
-  const toggleExpanded = (itemKey: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(itemKey)) {
-      newExpanded.delete(itemKey);
-    } else {
-      newExpanded.add(itemKey);
-    }
-    setExpandedItems(newExpanded);
-  };
-
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  return (
-    <div
-      className={`bg-[#000000] box-border content-stretch flex flex-col gap-4 h-[800px] items-start justify-start overflow-visible p-4 relative rounded-r-2xl shrink-0 transition-all duration-500 ${
-        isCollapsed ? "w-16 min-w-16 !px-0 justify-center" : "w-80"
-      }`}
-      style={{ transitionTimingFunction: softSpringEasing }}
-      data-name="Detail Sidebar"
-    >
-      <SectionTitle
-        title={content.title}
-        onToggleCollapse={toggleCollapse}
-        isCollapsed={isCollapsed}
-      />
-      <SearchContainer isCollapsed={isCollapsed} />
-
-      <div
-        className={`basis-0 box-border content-stretch flex flex-col grow min-h-px min-w-10 p-0 relative shrink-0 w-full overflow-y-auto transition-all duration-500 ${
-          isCollapsed
-            ? "gap-2 items-center justify-start"
-            : "gap-4 items-start justify-start"
-        }`}
-        style={{ transitionTimingFunction: softSpringEasing }}
-      >
-        {content.sections.map((section, index) => (
-          <MenuSection
-            key={`${activeSection}-${index}`}
-            section={section}
-            expandedItems={expandedItems}
-            onToggleExpanded={toggleExpanded}
-            isCollapsed={isCollapsed}
-            // 👈 아래의 프롭스들을 MenuSection 내부로 전달하여 클릭 이벤트와 활성화 스타일을 처리합니다.
-            // currentSubSection={currentSubSection}
-            // onItemClick={onSubSectionChange}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
 // function DetailSidebar({
 //   activeSection,
-//   onSectionChange,
-// }: {
-//   activeSection: string;
-//   onSectionChange: (section: string) => void;
-// }) {
-//   const [expandedItems, setExpandedItems] = useState<
-//     Set<string>
-//   >(new Set());
+// }: DetailSidebarProps) {
+//   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 //   const [isCollapsed, setIsCollapsed] = useState(false);
 //   const content = getSidebarContent(activeSection);
 
@@ -743,9 +695,7 @@ function DetailSidebar({
 //   return (
 //     <div
 //       className={`bg-[#000000] box-border content-stretch flex flex-col gap-4 h-[800px] items-start justify-start overflow-visible p-4 relative rounded-r-2xl shrink-0 transition-all duration-500 ${
-//         isCollapsed
-//           ? "w-16 min-w-16 !px-0 justify-center"
-//           : "w-80"
+//         isCollapsed ? "w-16 min-w-16 !px-0 justify-center" : "w-80"
 //       }`}
 //       style={{ transitionTimingFunction: softSpringEasing }}
 //       data-name="Detail Sidebar"
@@ -772,22 +722,102 @@ function DetailSidebar({
 //             expandedItems={expandedItems}
 //             onToggleExpanded={toggleExpanded}
 //             isCollapsed={isCollapsed}
+//             // 👈 아래의 프롭스들을 MenuSection 내부로 전달하여 클릭 이벤트와 활성화 스타일을 처리합니다.
+//             // currentSubSection={currentSubSection}
+//             // onItemClick={onSubSectionChange}
 //           />
 //         ))}
 //       </div>
 //     </div>
 //   );
 // }
-function TwoLevelSidebar({
+function DetailSidebar({
   activeSection,
+  activeSubSection,
   onSectionChange,
-  // currentSubSection,
-  // onSubSectionChange,
+  onSubSectionChange,
+  setSubSectionChange,
 }: {
   activeSection: string;
+  activeSubSection: string;
+  onSectionChange: (section: string) => void;
+  onSubSectionChange: (section: string) => void;
+  setSubSectionChange: (subSection: string) => void;
+}) {
+  const [expandedItems, setExpandedItems] = useState<
+    Set<string>
+  >(new Set());
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const content = getSidebarContent(activeSection);
+  const subContent = getSidebarContent(activeSubSection);
+
+  const toggleExpanded = (itemKey: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemKey)) {
+      newExpanded.delete(itemKey);
+    } else {
+      newExpanded.add(itemKey);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  return (
+    <div
+      className={`bg-[#000000] box-border content-stretch flex flex-col gap-4 h-[800px] items-start justify-start overflow-visible p-4 relative rounded-r-2xl shrink-0 transition-all duration-500 ${
+        isCollapsed
+          ? "w-16 min-w-16 !px-0 justify-center"
+          : "w-80"
+      }`}
+      style={{ transitionTimingFunction: softSpringEasing }}
+      data-name="Detail Sidebar"
+    >
+      <SectionTitle
+        title={content.title}
+        onToggleCollapse={toggleCollapse}
+        isCollapsed={isCollapsed}
+      />
+      <SearchContainer isCollapsed={isCollapsed} />
+
+      <div
+        className={`basis-0 box-border content-stretch flex flex-col grow min-h-px min-w-10 p-0 relative shrink-0 w-full overflow-y-auto transition-all duration-500 ${
+          isCollapsed
+            ? "gap-2 items-center justify-start"
+            : "gap-4 items-start justify-start"
+        }`}
+        style={{ transitionTimingFunction: softSpringEasing }}
+      >
+        {content.sections.map((section, index) => (
+          <MenuSection
+            key={`${activeSection}-${index}`}
+            section={section}
+            activeSubSection={activeSubSection}
+            expandedItems={expandedItems}
+            onToggleExpanded={toggleExpanded}
+            isCollapsed={isCollapsed}
+            setSubSectionChange={setSubSectionChange}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TwoLevelSidebar({
+  activeSection,
+  activeSubSection,
+  onSectionChange,
+  onSubSectionChange,
+  setSubSectionChange,
+}: {
+  activeSection: string;
+  activeSubSection: string,
   onSectionChange: (s: string) => void;
-  // currentSubSection: string; // 👈 타입 정의 추가
-  // onSubSectionChange: (subSection: string) => void; // 👈 타입 정의 추가
+  onSubSectionChange: (s: string) => void;
+  setSubSectionChange: (subSection: string) => void;
 }) {
   return (
     <div
@@ -803,8 +833,10 @@ function TwoLevelSidebar({
       {/* 2단계 상세 서브 메뉴 사이드바 (주석 해제 후 프롭스 전달) */}
       <DetailSidebar 
         activeSection={activeSection} 
-        // currentSubSection={currentSubSection} // 👈 추가
-        // onSubSectionChange={onSubSectionChange} // 👈 추가
+        activeSubSection={activeSubSection}
+        onSectionChange={onSectionChange}
+        onSubSectionChange={onSubSectionChange}
+        setSubSectionChange={setSubSectionChange}
       />
     </div>
   );
@@ -841,38 +873,36 @@ export function Frame760() {
       case "analytics":
         return <AnalyticsDashboard />;
       case "dashboard":
-        return <CampManagement />;
-      default:
+        if(activeSubSection === "campaign-management") {
+          return <CampManagement />;
+        } else if(activeSubSection === "campaign-approval-list") {
+          return <CampApprovalList />;
+        } else if(activeSubSection === "item-management") {
+          return <ItemManagement />;
+        } else if(activeSubSection === "item-code-mapping-management") {
+          return <ItemCodeMappingManagement />;
+        } else if(activeSubSection === "filter-condition-management") {
+          return <FilterConditionManagement />;
+        } else if(activeSubSection === "data-format-management") {
+          return <DataFormatManagement />;
+        } else if(activeSubSection === "system-variable-management") {
+          return <SystemVarManagement />;
+        } else if(activeSubSection === "user-management") {
+          return <UserManagement />;
+        }else{
+          return <CampManagement />;
+        }
+      default:    
         return <CampManagement />;
     }
   };
-  const renderSubContent = () => {
-    switch (activeSubSection) {
-      case "campaign-management":
-        return <CampManagement />;
-      case "campaign-approval":
-        return <CampApprovalList />; // 👈 임의의 서브 화면 컴포넌트들
-      case "item-management":
-        return <ItemManagement />;
-      case "item-code-mapping-management":
-        return <ItemCodeMappingManagement />;
-      case "filter-condition-management":
-        return <FilterConditionManagement />;
-      case "data-format-management":
-        return <DataFormatManagement />;
-      case "system-variable-management":
-        return <SystemVarManagement />;
-      case "user-management":
-        return <UserManagement />;
-      default:
-        return <CampManagement />;
-    }
-  }
+  
   return (
     <div className="bg-[#1a1a1a] box-border content-stretch flex flex-row gap-0 items-start justify-center p-0 relative size-full min-h-screen">
-      <TwoLevelSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-      {activeSection === "analytics" ? <AnalyticsDashboard /> : <CampManagement />}
-      {/* {renderContent()} */}
+      <TwoLevelSidebar activeSection={activeSection} onSectionChange={setActiveSection} 
+                       activeSubSection={activeSubSection} onSubSectionChange={setActiveSubSection} setSubSectionChange={setActiveSubSection}/>
+      {/* {activeSection === "analytics" ? <AnalyticsDashboard /> : <CampManagement />} */}
+      {renderContent()}
     </div>
   );
 }

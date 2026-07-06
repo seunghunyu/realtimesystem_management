@@ -513,7 +513,7 @@ export function ItemManagement() {
 
           {/* header */}
           <div className="mb-6">
-            <h1 className="font-semibold text-3xl text-neutral-50 mb-1">사용자 관리</h1>
+            <h1 className="font-semibold text-3xl text-neutral-50 mb-1">아이템 관리</h1>
             {/* <p className="text-neutral-400 text-sm">사용자 데이터를 관리하고 필터링하세요</p> */}
           </div>
 

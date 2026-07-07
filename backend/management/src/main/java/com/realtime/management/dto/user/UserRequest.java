@@ -15,10 +15,14 @@ public class UserRequest {
 
     private String roleCd;
 
+
     private String stat;
 
     private String deptCd;
 
+    @NotBlank
+    private String password;
 
+    private String address;
 
 }

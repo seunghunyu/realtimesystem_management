@@ -33,6 +33,8 @@ export interface CreateUserPayload {
   /** plain-text; the server must hash it */
   password: string;
   roleCd: string;
+  roleNm: string;
+  deptCd: string;
   deptNm: string;
   address?: string;
 }
@@ -74,7 +76,7 @@ export const userService = {
    * else console.error(result.message);
    */
   create(payload: CreateUserPayload): Promise<ApiResult<UserDto>> {
-    return apiClient.post<UserDto>("/api/users", payload);
+    return apiClient.post<UserDto>("/api/users/save", payload);
   },
 
   /**

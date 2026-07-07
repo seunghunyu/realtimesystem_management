@@ -21,13 +21,18 @@ public class Users {
     private String userName;
 
     @Column(name = "stat")
-    private String stat;
+    @Builder.Default
+    private String stat = "pending";
 
+    @Column(name = "password")
+    private String password;
 //    @Column(name = "dept_cd")
 //    private String deptCd;
 //
 //    @Column(name = "role_cd")
 //    private String roleCd;
+    @Column(name = "address")
+    private String address;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -41,9 +46,11 @@ public class Users {
     @JoinColumn(name = "role_cd")     // 데이터베이스의 실제 FK 컬럼명
     private Roles roles;
 
-    public void update(String userName, String stat, Depts depts, Roles roles){
+    public void update(String userName, String stat, String password, String address, Depts depts, Roles roles){
         this.userName = userName;
         this.stat = stat;
+        this.password = password;
+        this.address = address;
         this.depts = depts;
         this.roles = roles;
     }

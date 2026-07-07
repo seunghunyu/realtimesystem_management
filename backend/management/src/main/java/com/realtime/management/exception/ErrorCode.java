@@ -19,8 +19,20 @@ public enum ErrorCode {
 
     // Roless
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "역할을 찾을 수 없습니다."),
-    ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 존재하는 역할입니다.");
-    
+    ROLE_ALREADY_EXISTS(HttpStatus.CONFLICT, "R002", "이미 존재하는 역할입니다."),
+
+    // System Variables
+    SYSVARS_NOT_FOUND(HttpStatus.NOT_FOUND, "SV001", "시스템 변수를 찾을 수 없습니다."),
+    SYSVARS_ALREADY_EXISTS(HttpStatus.CONFLICT, "SV002", "이미 존재하는 시스템 변수입니다."),
+
+    // System Variables
+    ITEMS_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "아이템을 찾을 수 없습니다."),
+    ITEMS_ALREADY_EXISTS(HttpStatus.CONFLICT, "I002", "이미 존재하는 아이템입니다."),
+
+    // System Variables
+    CDTBL_NOT_FOUND(HttpStatus.NOT_FOUND, "CDT001", "코드 테이블을 찾을 수 없습니다."),
+    CDTBL_ALREADY_EXISTS(HttpStatus.CONFLICT, "CDT002", "이미 존재하는 코드 테이블입니다.");
+
     private final HttpStatus status;
     private final String code;
     private final String message;

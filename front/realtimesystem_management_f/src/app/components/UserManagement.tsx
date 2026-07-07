@@ -65,27 +65,27 @@ interface RoleItem{
 }
 
 interface FormState {
-  user_id : string;
-  user_name: string;
+  userId : string;
+  userName: string;
   password: string;
   confirmPassword: string;
   address: string;
-  role_cd: string;
-  role_nm: string;
-  dept_cd: string;
-  dept_nm: string;
+  roleCd: string;
+  roleNm: string;
+  deptCd: string;
+  deptNm: string;
 }
 
 interface FormErrors {
-  user_id?: string;
-  user_name?: string;
+  userId?: string;
+  userName?: string;
   password?: string;
   confirmPassword?: string;
   address?: string;
-  role_cd?: string;
-  role_nm?: string;
-  dept_cd?: string; 
-  dept_nm?: string;
+  roleCd?: string;
+  roleNm?: string;
+  deptCd?: string; 
+  deptNm?: string;
 }
 
 // ── initial data ───────────────────────────────────────────────
@@ -99,8 +99,8 @@ interface FormErrors {
 // const DEPARTMENTS = ["엔지니어링", "디자인", "마케팅", "애널리틱스", "제품", "기타"];
 
 const EMPTY_FORM: FormState = {
-  user_name: "", user_id: "", password: "", confirmPassword: "",
-  address: "", role_cd: "", role_nm: "", dept_cd: "", dept_nm: "",
+  userName: "", userId: "", password: "", confirmPassword: "",
+  address: "", roleCd: "", roleNm: "", deptCd: "", deptNm: "",
 };
 
 // ── helpers ────────────────────────────────────────────────────
@@ -110,11 +110,11 @@ function today() {
 
 function validateForm(f: FormState): FormErrors {
   const e: FormErrors = {};
-  if (!f.user_name.trim()) e.user_name = "이름을 입력해주세요.";
-  if (!f.user_id.trim()) {
-    e.user_id = "이메일을 입력해주세요.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.user_id)) {
-    e.user_id = "올바른 이메일 형식이 아닙니다.";
+  if (!f.userName.trim()) e.userName = "이름을 입력해주세요.";
+  if (!f.userId.trim()) {
+    e.userId = "이메일을 입력해주세요.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.userId)) {
+    e.userId = "올바른 이메일 형식이 아닙니다.";
   }
   if (!f.password) {
     e.password = "비밀번호를 입력해주세요.";
@@ -127,8 +127,8 @@ function validateForm(f: FormState): FormErrors {
     e.confirmPassword = "비밀번호가 일치하지 않습니다.";
   }
   if (!f.address.trim()) e.address = "주소를 입력해주세요.";
-  if (!f.role_cd) e.role_cd = "역할을 선택해주세요.";
-  if (!f.dept_nm) e.dept_nm = "부서를 선택해주세요.";
+  if (!f.roleCd) e.roleCd = "역할을 선택해주세요.";
+  if (!f.deptNm) e.deptNm = "부서를 선택해주세요.";
   return e;
 }
 
@@ -192,11 +192,13 @@ function RegistrationModal({
 
     // ── REST 요청: POST /api/users ──────────────────────────
     const result = await userService.create({
-      userId: form.user_id.trim(),
-      userName: form.user_name.trim(),
+      userId: form.userId.trim(),
+      userName: form.userName.trim(),
       password: form.password,
-      roleCd: form.role_cd,
-      deptNm: form.dept_nm,
+      roleCd: form.roleCd,
+      roleNm: form.roleNm,
+      deptCd: form.deptCd,
+      deptNm: form.deptNm,
       address: form.address.trim(),
     });
     // ───────────────────────────────────────────────────────
@@ -220,13 +222,13 @@ function RegistrationModal({
             lastActive: result.data.lastActive ?? "방금 전",
           }
         : {
-            userId: form.user_id.trim(),
-            userName: form.user_name.trim(),
+            userId: form.userId.trim(),
+            userName: form.userName.trim(),
             stat: "pending",
-            roleCd: form.role_cd,
-            roleNm: form.role_nm,
-            deptCd: form.dept_cd,
-            deptNm: form.dept_nm,
+            roleCd: form.roleCd,
+            roleNm: form.roleNm,
+            deptCd: form.deptCd,
+            deptNm: form.deptNm,
             address: form.address.trim(),
             createdAt: today(),
             lastActive: "방금 전",
@@ -286,22 +288,22 @@ function RegistrationModal({
         {/* form body */}
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4 relative" style={{ maxHeight: "60vh" }}>
 
-          <Field label="이름" required error={errors.user_name}>
+          <Field label="이름" required error={errors.userName}>
             <Input
-              value={form.user_name}
-              onChange={e => set("user_name", e.target.value)}
+              value={form.userName}
+              onChange={e => set("userName", e.target.value)}
               placeholder="홍길동"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_name ? "border-rose-500" : ""}`}
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.userName ? "border-rose-500" : ""}`}
             />
           </Field>
 
-          <Field label="아이디" required error={errors.user_id}>
+          <Field label="아이디" required error={errors.userId}>
             <Input
               type="email"
-              value={form.user_id}
-              onChange={e => set("user_id", e.target.value)}
+              value={form.userId}
+              onChange={e => set("userId", e.target.value)}
               placeholder="example@company.com"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_id ? "border-rose-500" : ""}`}
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.userId ? "border-rose-500" : ""}`}
             />
           </Field>
 
@@ -365,9 +367,20 @@ function RegistrationModal({
             />
           </Field>
 
-          <Field label="역할" required error={errors.role_cd}>
-            <Select value={form.role_cd} onValueChange={v => set("role_cd", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.role_cd ? "border-rose-500" : ""}`}>
+          <Field label="역할" required error={errors.roleNm}>
+            <Select value={form.roleNm} 
+                    onValueChange={v=>{
+                        // v => set("roleCd", v)
+                        const selectedRole = roles.find(r => r.roleNm === v);
+                        if (selectedRole) {
+                          set("roleCd", selectedRole.roleCd);
+                          set("roleNm", selectedRole.roleNm);
+                        } else {
+                          set("roleCd", "");
+                          set("roleNm", "");
+                        }
+                    }}>
+              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.roleNm ? "border-rose-500" : ""}`}>
                 <SelectValue placeholder="역할 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -376,9 +389,20 @@ function RegistrationModal({
             </Select>
           </Field>
 
-          <Field label="부서" required error={errors.dept_nm}>
-            <Select value={form.dept_nm} onValueChange={v => set("dept_nm", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.dept_nm ? "border-rose-500" : ""}`}>
+          <Field label="부서" required error={errors.deptNm}>
+            <Select value={form.deptNm} 
+                    onValueChange={v => {
+                         // set("deptNm", v)
+                          const selectedDept = departments.find(d => d.deptNm === v);
+                          if (selectedDept) {
+                            set("deptCd", selectedDept.deptCd);
+                            set("deptNm", selectedDept.deptNm);
+                          } else {
+                            set("deptCd", "");
+                            set("deptNm", "");
+                          }
+                    }}>
+              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.deptNm ? "border-rose-500" : ""}`}>
                 <SelectValue placeholder="부서 선택" />
               </SelectTrigger>
               <SelectContent>
@@ -714,9 +738,9 @@ export function UserManagement() {
                   <TableHead className="text-neutral-400">상태</TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("roleCd")}
+                    onClick={() => handleSort("roleNm")}
                   >
-                    <div className="flex items-center gap-1">역할<SortIcon field="roleCd" /></div>
+                    <div className="flex items-center gap-1">역할<SortIcon field="roleNm" /></div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
@@ -746,7 +770,7 @@ export function UserManagement() {
                     <TableCell className="text-neutral-50 font-medium">{item.userName}</TableCell>
                     <TableCell className="text-neutral-400 text-sm">{item.userId}</TableCell>
                     <TableCell>{getStatusBadge(item.stat)}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.roleCd}</TableCell>
+                    <TableCell className="text-neutral-300 text-sm">{item.roleNm}</TableCell>
                     <TableCell className="text-neutral-300 text-sm">{item.deptNm}</TableCell>
                     <TableCell className="text-neutral-500 text-sm">{item.createdAt}</TableCell>
                     {/* <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell> */}

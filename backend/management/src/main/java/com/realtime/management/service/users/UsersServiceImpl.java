@@ -42,9 +42,11 @@ public class UsersServiceImpl implements UsersService {
                 .userId(request.getUserId())
                 .userName(request.getUserName())
                 .stat(request.getStat())
+                .address(request.getAddress())
                 .createdAt(LocalDateTime.now())
                 .roles(roles)
                 .depts(depts)
+                .password(request.getPassword())
                 .build();
         repository.save(users);
 
@@ -61,7 +63,7 @@ public class UsersServiceImpl implements UsersService {
         Roles roles = rolesRepository.findById(request.getRoleCd())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
 
-        users.update(request.getUserName(), request.getStat(), depts, roles);
+        users.update(request.getUserName(), request.getStat(), request.getPassword(), request.getAddress(), depts, roles);
 
         return UserResponse.from(users);
     }

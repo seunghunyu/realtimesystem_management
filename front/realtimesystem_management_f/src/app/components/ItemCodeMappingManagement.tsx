@@ -49,7 +49,7 @@ interface DataItem {
   roleNm: string;
   deptCd: string;
   deptNm: string;
-  joinDate: string;
+  createdAt: string;
   lastActive: string;
   address?: string;
 }
@@ -216,7 +216,7 @@ function RegistrationModal({
             deptCd: result.data.deptCd,
             deptNm: result.data.deptNm,
             address: result.data.address,
-            joinDate: result.data.joinDate ?? today(),
+            createdAt: result.data.createdAt ?? today(),
             lastActive: result.data.lastActive ?? "방금 전",
           }
         : {
@@ -228,7 +228,7 @@ function RegistrationModal({
             deptCd: form.dept_cd,
             deptNm: form.dept_nm,
             address: form.address.trim(),
-            joinDate: today(),
+            createdAt: today(),
             lastActive: "방금 전",
           };
 
@@ -748,7 +748,7 @@ export function ItemCodeMappingManagement() {
                     <TableCell>{getStatusBadge(item.stat)}</TableCell>
                     <TableCell className="text-neutral-300 text-sm">{item.roleCd}</TableCell>
                     <TableCell className="text-neutral-300 text-sm">{item.deptNm}</TableCell>
-                    <TableCell className="text-neutral-500 text-sm">{item.joinDate}</TableCell>
+                    <TableCell className="text-neutral-500 text-sm">{item.createdAt}</TableCell>
                     <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell>
                     <TableCell>
                       <DropdownMenu>

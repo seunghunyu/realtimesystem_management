@@ -7,16 +7,18 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ItemRequest {
-    @NotBlank
-    private String userId;
+    private String itemId;
 
     @NotBlank
-    private String userName;
+    private String itemNm;
 
-    private String role;
+    private String itemAlias;
 
-    private String stat;
+    @NotBlank
+    private String itemType;
 
-    private String deptCd;
+    private String itemDesc;
+
+    private String cdTblId;
 
 }

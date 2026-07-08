@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { userService } from "../services/userService";
+import { itemService } from "../services/itemService";
 import {
   Search,
   Filter,
@@ -38,69 +38,43 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Badge } from "./ui/badge";
-import { deptService, roleService } from "../services/codevalService";
+
+
+// 1. 배열 내부에 들어갈 객체의 명확한 타입을 먼저 정의합니다.
+interface CodeValueItem {
+  cdId: string;
+  cdNm: string;
+}
 
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
-  userId: string;
-  userName: string;
-  stat: "active" | "inactive" | "pending";
-  roleCd: string;
-  roleNm: string;
-  deptCd: string;
-  deptNm: string;
+  cdTblId: string;
+  cdTblNm: string;
+  cdTblDesc: string;
+  cdTblInfo: CodeValueItem[];
   createdAt: string;
-  lastActive: string;
-  address?: string;
 }
 
-interface DeptItem{
-  deptCd: string;
-  deptNm: string;
-}
-
-interface RoleItem{
-  roleCd: string;
-  roleNm: string;
-}
 
 interface FormState {
-  user_id : string;
-  user_name: string;
-  password: string;
-  confirmPassword: string;
-  address: string;
-  role_cd: string;
-  role_nm: string;
-  dept_cd: string;
-  dept_nm: string;
+  cdTblId: string;
+  cdTblNm: string;
+  cdTblDesc: string;
+  cdTblInfo: CodeValueItem[];
+  createdAt: string;
 }
 
 interface FormErrors {
-  user_id?: string;
-  user_name?: string;
-  password?: string;
-  confirmPassword?: string;
-  address?: string;
-  role_cd?: string;
-  role_nm?: string;
-  dept_cd?: string; 
-  dept_nm?: string;
+  cdTblId?: string;
+  cdTblNm?: string;
+  cdTblDesc?: string;
+  cdTblInfo?: string;
+  createdAt?: string;
 }
 
-// ── initial data ───────────────────────────────────────────────
-// const INITIAL_DATA: DataItem[] = [
-//   { user_id: "kim.chulsoo@company.com", user_name: "김철수",  stat: "active", role_cd: "개발자", dept_nm: "엔지니어링", joinDate: "2024-01-15", lastActive: "2분 전" },
-//   { user_id: "lee.younghee@company.com", user_name: "이영희",  stat: "active", role_cd: "디자이너", dept_nm: "디자인", joinDate: "2024-02-20", lastActive: "5분 전" },
-//   { user_id: "park.jimin@company.com", user_name: "박지민",  stat: "pending", role_cd: "마케터", dept_nm: "마케팅", joinDate: "2024-03-10", lastActive: "1시간 전" },
-// ];
-
-// const ROLES = ["개발자", "디자이너", "마케터", "프로젝트 매니저", "데이터 분석가", "UX 디자이너", "제품 매니저", "기타"];
-// const DEPARTMENTS = ["엔지니어링", "디자인", "마케팅", "애널리틱스", "제품", "기타"];
 
 const EMPTY_FORM: FormState = {
-  user_name: "", user_id: "", password: "", confirmPassword: "",
-  address: "", role_cd: "", role_nm: "", dept_cd: "", dept_nm: "",
+  cdTblId: "", cdTblNm: "", cdTblDesc: "", cdTblInfo: [], createdAt: ""
 };
 
 // ── helpers ────────────────────────────────────────────────────
@@ -110,25 +84,8 @@ function today() {
 
 function validateForm(f: FormState): FormErrors {
   const e: FormErrors = {};
-  if (!f.user_name.trim()) e.user_name = "이름을 입력해주세요.";
-  if (!f.user_id.trim()) {
-    e.user_id = "이메일을 입력해주세요.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.user_id)) {
-    e.user_id = "올바른 이메일 형식이 아닙니다.";
-  }
-  if (!f.password) {
-    e.password = "비밀번호를 입력해주세요.";
-  } else if (f.password.length < 8) {
-    e.password = "비밀번호는 8자 이상이어야 합니다.";
-  }
-  if (!f.confirmPassword) {
-    e.confirmPassword = "비밀번호 확인을 입력해주세요.";
-  } else if (f.password !== f.confirmPassword) {
-    e.confirmPassword = "비밀번호가 일치하지 않습니다.";
-  }
-  if (!f.address.trim()) e.address = "주소를 입력해주세요.";
-  if (!f.role_cd) e.role_cd = "역할을 선택해주세요.";
-  if (!f.dept_nm) e.dept_nm = "부서를 선택해주세요.";
+  if (!f.cdTblNm.trim()) e.cdTblNm = "코드 테이블 명을 입력해주세요.";
+  if (f.cdTblInfo.length == 0) e.cdTblInfo = "코드 테이블 정보를 입력해주세요.";
   return e;
 }
 
@@ -160,13 +117,9 @@ function Field({ label, required, error, children }: {
 function RegistrationModal({
   onClose,
   onSubmit,
-  departments,
-  roles,
 }: {
   onClose: () => void;
   onSubmit: (item: DataItem) => void;
-  departments: DeptItem[];
-  roles: RoleItem[];
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -191,13 +144,12 @@ function RegistrationModal({
     setApiError(null);
 
     // ── REST 요청: POST /api/users ──────────────────────────
-    const result = await userService.create({
-      userId: form.user_id.trim(),
-      userName: form.user_name.trim(),
-      password: form.password,
-      roleCd: form.role_cd,
-      deptNm: form.dept_nm,
-      address: form.address.trim(),
+    const result = await itemService.createCdTblInfo({
+      cdTblId: form.cdTblId.trim(),
+      cdTblNm: form.cdTblNm.trim(),
+      cdTblDesc: form.cdTblDesc,
+      cdTblInfo: form.cdTblInfo,
+      createdAt: form.createdAt,
     });
     // ───────────────────────────────────────────────────────
 
@@ -208,28 +160,18 @@ function RegistrationModal({
     const newItem: DataItem =
       result.ok && result.data
         ? {
-            userId: result.data.userId,
-            userName: result.data.userName,
-            stat: result.data.stat ?? "pending",
-            roleCd: result.data.roleCd,
-            roleNm: result.data.roleNm,
-            deptCd: result.data.deptCd,
-            deptNm: result.data.deptNm,
-            address: result.data.address,
-            createdAt: result.data.createdAt ?? today(),
-            lastActive: result.data.lastActive ?? "방금 전",
+            cdTblId: result.data.cdTblId,
+            cdTblNm: result.data.cdTblNm,
+            cdTblDesc: result.data.cdTblDesc,
+            cdTblInfo: result.data.cdTblInfo,
+            createdAt: result.data.createdAt ?? today()
           }
         : {
-            userId: form.user_id.trim(),
-            userName: form.user_name.trim(),
-            stat: "pending",
-            roleCd: form.role_cd,
-            roleNm: form.role_nm,
-            deptCd: form.dept_cd,
-            deptNm: form.dept_nm,
-            address: form.address.trim(),
-            createdAt: today(),
-            lastActive: "방금 전",
+            cdTblId: form.cdTblId.trim(),
+            cdTblNm: form.cdTblNm.trim(),
+            cdTblDesc: form.cdTblDesc,
+            cdTblInfo: form.cdTblInfo,
+            createdAt: today()
           };
 
     if (!result.ok) {
@@ -263,8 +205,8 @@ function RegistrationModal({
         {/* header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800 shrink-0">
           <div>
-            <h2 className="text-neutral-50 text-lg font-semibold">회원가입 신청</h2>
-            <p className="text-neutral-500 text-xs mt-0.5">새로운 사용자를 등록합니다</p>
+            <h2 className="text-neutral-50 text-lg font-semibold">코드 테이블 등록</h2>
+            <p className="text-neutral-500 text-xs mt-0.5">코드 테이블 정보를 등록합니다</p>
           </div>
           <button
             onClick={onClose}
@@ -279,116 +221,118 @@ function RegistrationModal({
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-900/95 rounded-2xl gap-3">
             <CheckmarkFilled size={48} className="text-green-400" />
             <p className="text-neutral-50 font-semibold text-lg">등록 완료!</p>
-            <p className="text-neutral-400 text-sm">사용자 목록에 추가되었습니다.</p>
+            <p className="text-neutral-400 text-sm">코드 테이블 목록에 추가되었습니다.</p>
           </div>
         )}
 
         {/* form body */}
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4 relative" style={{ maxHeight: "60vh" }}>
 
-          <Field label="이름" required error={errors.user_name}>
+          <Field label="코드 테이블 명" required error={errors.cdTblNm}>
             <Input
-              value={form.user_name}
-              onChange={e => set("user_name", e.target.value)}
-              placeholder="홍길동"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_name ? "border-rose-500" : ""}`}
+              value={form.cdTblNm}
+              onChange={e => set("cdTblNm", e.target.value)}
+              placeholder="지역코드"
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.cdTblNm ? "border-rose-500" : ""}`}
             />
           </Field>
 
-          <Field label="아이디" required error={errors.user_id}>
+          <Field label="코드 테이블 설명" error={errors.cdTblDesc}>
             <Input
-              type="email"
-              value={form.user_id}
-              onChange={e => set("user_id", e.target.value)}
-              placeholder="example@company.com"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_id ? "border-rose-500" : ""}`}
+              value={form.cdTblDesc}
+              onChange={e => set("cdTblDesc", e.target.value)}
+              placeholder="지역별 숫자 코드를 맵핑"
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.cdTblDesc ? "border-rose-500" : ""}`}
             />
           </Field>
-
-          <Field label="비밀번호" required error={errors.password}>
-            <Input
-              type="password"
-              value={form.password}
-              onChange={e => set("password", e.target.value)}
-              placeholder="8자 이상"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.password ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          <Field label="비밀번호 확인" required error={errors.confirmPassword}>
-            <Input
-              type="password"
-              value={form.confirmPassword}
-              onChange={e => set("confirmPassword", e.target.value)}
-              placeholder="비밀번호 재입력"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.confirmPassword ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          {/* password strength */}
-          {form.password && (
-            <div className="flex items-center gap-2 -mt-1">
-              {[1, 2, 3, 4].map(i => {
-                const strength = Math.min(
-                  4,
-                  (form.password.length >= 8 ? 1 : 0) +
-                  (/[A-Z]/.test(form.password) ? 1 : 0) +
-                  (/[0-9]/.test(form.password) ? 1 : 0) +
-                  (/[^A-Za-z0-9]/.test(form.password) ? 1 : 0)
-                );
-                const colors = ["bg-rose-500", "bg-amber-500", "bg-yellow-400", "bg-green-400"];
-                return (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= strength ? colors[strength - 1] : "bg-neutral-800"}`}
-                  />
-                );
-              })}
-              <span className="text-xs text-neutral-500 shrink-0">
-                {["", "취약", "보통", "강함", "매우 강함"][
-                  Math.min(4, (form.password.length >= 8 ? 1 : 0) +
-                  (/[A-Z]/.test(form.password) ? 1 : 0) +
-                  (/[0-9]/.test(form.password) ? 1 : 0) +
-                  (/[^A-Za-z0-9]/.test(form.password) ? 1 : 0))
-                ]}
-              </span>
+          <Field label="코드 테이블 정보" error={errors.cdTblInfo}>
+            <div className="w-full space-y-2">
+            {/* 테이블 헤더 */}
+            <div className="grid grid-cols-[60px_1fr_1fr_40px] gap-2 px-2 text-xs font-semibold text-neutral-400">
+              <div className="text-center">인덱스</div>
+              <div>컬럼 코드</div>
+              <div>코드 값</div>
+              <div></div>
             </div>
-          )}
 
-          {/* address */}
-          <Field label="주소" required error={errors.address}>
-            <Input
-              value={form.address}
-              onChange={e => set("address", e.target.value)}
-              placeholder="서울특별시 강남구 테헤란로 123"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.address ? "border-rose-500" : ""}`}
-            />
-          </Field>
+            {/* 동적 행(Row) 리스트 */}
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              {form.cdTblInfo.map((item, index) => (
+                <div key={index} className="grid grid-cols-[60px_1fr_1fr_40px] gap-2 items-center">
+                  {/* 1. 인덱스 표시 */}
+                  <div className="text-center text-sm text-neutral-400 font-mono">
+                    {index + 1}
+                  </div>
 
-          <Field label="역할" required error={errors.role_cd}>
-            <Select value={form.role_cd} onValueChange={v => set("role_cd", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.role_cd ? "border-rose-500" : ""}`}>
-                <SelectValue placeholder="역할 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map(r => <SelectItem key={r.roleCd} value={r.roleNm}>{r.roleNm}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </Field>
+                  {/* 2. 컬럼 코드 입력 (cdId) */}
+                  <Input
+                    value={item.cdId}
+                    onChange={e => {
+                      const updatedInfo = [...form.cdTblInfo];
+                      updatedInfo[index].cdId = e.target.value;
+                      setForm(prev => ({
+                        ...prev,
+                        cdTblInfo: updatedInfo
+                      }));
+                    }}
+                    placeholder="예: LOC_01"
+                    className="bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500"
+                  />
 
-          <Field label="부서" required error={errors.dept_nm}>
-            <Select value={form.dept_nm} onValueChange={v => set("dept_nm", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.dept_nm ? "border-rose-500" : ""}`}>
-                <SelectValue placeholder="부서 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
-              </SelectContent>
-            </Select>
+                  {/* 3. 코드 값 입력 (cdNm) */}
+                  <Input
+                    value={item.cdNm}
+                    onChange={e => {
+                      const updatedInfo = [...form.cdTblInfo];
+                      updatedInfo[index].cdNm = e.target.value;
+                      setForm(prev => ({
+                        ...prev,
+                        cdTblInfo: updatedInfo
+                      }));
+                    }}
+                    placeholder="예: 서울"
+                    className="bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500"
+                  />
+
+                  {/* 4. 삭제 버튼 (X) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // 클릭한 인덱스만 제외하고 필터링하여 상태 업데이트
+                      const filteredInfo = form.cdTblInfo.filter((_, i) => i !== index);
+                      setForm(prev => ({
+                        ...prev,
+                        cdTblInfo: filteredInfo
+                      }));
+                    }}
+                    className="h-9 w-9 flex items-center justify-center rounded border border-neutral-700 text-neutral-400 hover:text-rose-500 hover:border-rose-500 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* 행 추가 버튼 (+) */}
+            <button
+              type="button"
+              onClick={() => {
+                // 기존 배열 뒤에 빈 객체를 새롭게 추가
+                setForm(prev => ({
+                        ...prev,
+                        cdTblInfo: [...form.cdTblInfo, { cdId: "", cdNm: "" }]
+                }));
+              }}
+              className="w-full h-9 flex items-center justify-center rounded border border-dashed border-neutral-700 text-neutral-400 hover:text-blue-500 hover:border-blue-500 transition-colors text-sm font-medium"
+            >
+              + 항목 추가하기
+            </button>
+          </div>
           </Field>
+          
 
           <p className="text-neutral-600 text-xs pt-1">
-            <span className="text-rose-400">*</span> 필수 입력 항목 / 가입 후 상태는 <span className="text-yellow-500">대기중</span>으로 설정됩니다.
+            <span className="text-rose-400">*</span> 필수 입력 항목 
           </p>
 
           {apiError && (
@@ -423,7 +367,7 @@ function RegistrationModal({
             ) : (
               <>
                 <AddLarge size={14} />
-                회원가입 신청
+                코드 테이블 맵핑 정보 등록
               </>
             )}
           </button>
@@ -438,28 +382,24 @@ type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
 export function ItemCodeMappingManagement() {
-  const [users, setUsers] = useState<DataItem[]>([]);
-  const [departments, setDepartments] = useState<DeptItem[]>([]);
-  const [roles, setRoles] = useState<RoleItem[]>([]);
+  const [cdTblInfo, setCdTblinfo] = useState<DataItem[]>([]);
+  
 
   const [showModal, setShowModal] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>("userName");
+  const [sortField, setSortField] = useState<SortField>("cdTblNm");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const filteredAndSortedData = useMemo(() => {
-    const filtered = users.filter(item => {
+    const filtered = cdTblInfo.filter(item => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = item.userName.toLowerCase().includes(q) ||
-        item.userId.toLowerCase().includes(q) ||
-        item.roleCd.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "all" || item.stat === statusFilter;
-      const matchesDept = departmentFilter === "all" || item.deptNm === departmentFilter;
-      return matchesSearch && matchesStatus && matchesDept;
+      const matchesSearch = item.cdTblNm.toLowerCase().includes(q) ||
+        item.cdTblDesc;
+      return matchesSearch;
     });
 
     filtered.sort((a, b) => {
@@ -470,7 +410,7 @@ export function ItemCodeMappingManagement() {
       return 0;
     });
     return filtered;
-  }, [users, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
+  }, [cdTblInfo, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
 
   // const departments = Array.from(new Set(users.map(u => u.dept_nm)));
   // const roles = Array.from(new Set(users.map(u => u.role_cd)));
@@ -482,7 +422,7 @@ export function ItemCodeMappingManagement() {
 
   const toggleSelectAll = () => {
     if (selectedItems.size === filteredAndSortedData.length) setSelectedItems(new Set());
-    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.userId)));
+    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.cdTblId)));
   };
 
   const toggleSelectItem = (id: string) => {
@@ -496,53 +436,31 @@ export function ItemCodeMappingManagement() {
   const deleteSelected = async () => {
     const ids = Array.from(selectedItems);
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => !selectedItems.has(u.userId)));
+    setCdTblinfo(prev => prev.filter(u => !selectedItems.has(u.cdTblId)));
     setSelectedItems(new Set());
     // REST 요청: DELETE /api/users/:id (병렬)
-    await userService.removeMany(ids);
+    await itemService.removeManyCdTbls(ids);
   };
 
-  const deleteUser = async (id: string) => {
+  const deleteCdTblInfo = async (id: string) => {
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => u.userId !== id));
+    setCdTblinfo(prev => prev.filter(u => u.cdTblId !== id));
     setSelectedItems(prev => { const n = new Set(prev); n.delete(id); return n; });
     // REST 요청: DELETE /api/users/:id
-    await userService.remove(id);
+    await itemService.removeCdTbl(id); 
   };
 
   const addUser = (item: DataItem) => {
-    setUsers(prev => [item, ...prev]);
+    setCdTblinfo(prev => [item, ...prev]);
   };
 
-  const getUsers = async () => {
-    await userService.list().then(res => {
+  const getCdTblInfo = async () => {
+    await itemService.list().then(res => {
       if (res.ok && res.data) {
-        console.log("Users:", res.data);
-        setUsers(res.data);
+        console.log("CdTblInfo:", res.data);
+        // setCdTblinfo(res.data);
       } else {
         console.error("Failed to fetch users:");
-      }
-    });
-  };
-
-  const getRoles = async () => {
-    await roleService.list().then(res => {
-      if (res.ok && res.data) {
-        console.log("Roles:", res.data);
-        setRoles(res.data);
-      } else {
-        console.error("Failed to fetch roles:");
-      }
-    });
-  };
-
-  const getDepts = async () => {
-    await deptService.list().then(res => {
-      if (res.ok && res.data) {
-        console.log("Departments:", res.data);
-        setDepartments(res.data);
-      } else {
-        console.error("Failed to fetch departments:");
       }
     });
   };
@@ -563,9 +481,7 @@ export function ItemCodeMappingManagement() {
       : null;
 
   useEffect( () => {
-    getRoles(); //역할 정보
-    getDepts(); //부서 정보
-    getUsers(); //사용자 정보
+    getCdTblInfo(); //코드 테이블 정보 
   }, []); // []로 두면 컴포넌트가 처음 켜질 때 한번만 실행
 
 
@@ -576,8 +492,6 @@ export function ItemCodeMappingManagement() {
         <RegistrationModal
           onClose={() => setShowModal(false)}
           onSubmit={addUser}
-          departments={departments} 
-          roles={roles}
         />
       )}
 
@@ -606,31 +520,6 @@ export function ItemCodeMappingManagement() {
 
               {/* filters + actions */}
               <div className="flex gap-2 items-center flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Filter size={14} className="text-neutral-500" />
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-9 w-[130px] bg-neutral-950 border-neutral-800 text-neutral-50 text-sm">
-                      <SelectValue placeholder="상태" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">모든 상태</SelectItem>
-                      <SelectItem value="active">활성</SelectItem>
-                      <SelectItem value="inactive">비활성</SelectItem>
-                      <SelectItem value="pending">대기중</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                  <SelectTrigger className="h-9 w-[150px] bg-neutral-950 border-neutral-800 text-neutral-50 text-sm">
-                    <SelectValue placeholder="부서" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">모든 부서</SelectItem>
-                    {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-
                 <button
                   onClick={() => setShowModal(true)}
                   className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-2 transition-colors"
@@ -638,22 +527,6 @@ export function ItemCodeMappingManagement() {
                   <AddLarge size={15} />
                   새로운 항목
                 </button>
-
-                {/* <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="h-9 px-3 rounded-lg border border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-neutral-50 hover:bg-neutral-900 transition-colors flex items-center">
-                      <OverflowMenuHorizontal size={16} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>
-                      <Download size={14} className="mr-2" />내보내기
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setUsers(INITIAL_DATA)}>
-                      <Renew size={14} className="mr-2" />초기화
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu> */}
               </div>
             </div>
 
@@ -697,8 +570,8 @@ export function ItemCodeMappingManagement() {
                     />
                   </TableHead>
                   {([
-                    { field: "name" as SortField, label: "이름" },
-                    { field: "email" as SortField, label: "이메일" },
+                    { field: "cdTblNm" as SortField, label: "코드 테이블 명" },
+                    { field: "cdTblDesc" as SortField, label: "코드 테이블 설명" },
                   ]).map(col => (
                     <TableHead
                       key={col.field}
@@ -711,45 +584,27 @@ export function ItemCodeMappingManagement() {
                       </div>
                     </TableHead>
                   ))}
-                  <TableHead className="text-neutral-400">상태</TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("roleCd")}
-                  >
-                    <div className="flex items-center gap-1">역할<SortIcon field="roleCd" /></div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("deptNm")}
-                  >
-                    <div className="flex items-center gap-1">부서<SortIcon field="deptNm" /></div>
-                  </TableHead>
                   <TableHead className="text-neutral-400">가입일</TableHead>
-                  <TableHead className="text-neutral-400">최근 활동</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAndSortedData.map(item => (
                   <TableRow
-                    key={item.userId}
+                    key={item.cdTblId}
                     className="border-neutral-800 hover:bg-neutral-800/40 transition-colors"
                   >
                     <TableCell>
                       <input
                         type="checkbox"
-                        checked={selectedItems.has(item.userId)}
-                        onChange={() => toggleSelectItem(item.userId)}
+                        checked={selectedItems.has(item.cdTblId)}
+                        onChange={() => toggleSelectItem(item.cdTblId)}
                         className="w-4 h-4 rounded border-neutral-600 bg-neutral-950 accent-blue-500"
                       />
                     </TableCell>
-                    <TableCell className="text-neutral-50 font-medium">{item.userName}</TableCell>
-                    <TableCell className="text-neutral-400 text-sm">{item.userId}</TableCell>
-                    <TableCell>{getStatusBadge(item.stat)}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.roleCd}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.deptNm}</TableCell>
+                    <TableCell className="text-neutral-50 font-medium">{item.cdTblNm}</TableCell>
+                    <TableCell className="text-neutral-400 text-sm">{item.cdTblDesc}</TableCell>
                     <TableCell className="text-neutral-500 text-sm">{item.createdAt}</TableCell>
-                    <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -763,7 +618,7 @@ export function ItemCodeMappingManagement() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-rose-400 focus:text-rose-400"
-                            onClick={() => deleteUser(item.userId)}
+                            onClick={() => deleteCdTblInfo(item.cdTblId)}
                           >
                             <TrashCan size={13} className="mr-2" />삭제
                           </DropdownMenuItem>

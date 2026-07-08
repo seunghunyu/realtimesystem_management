@@ -43,6 +43,20 @@ export interface CreateItemPayload {
   cdTblId: string;
 }
 
+interface CodeValueItem {
+  cdId: string;
+  cdNm: string;
+}
+
+export interface CreateItemCdTblInfoPayload {
+  cdTblId: string;
+  cdTblNm: string;
+  cdTblDesc: string;
+  cdTblInfo: CodeValueItem[];
+  createdAt: string;
+}
+
+
 /** Body sent when updating an existing system variable — all fields optional */
 export type UpdateItemPayload = Partial<
   Omit<CreateItemPayload, "itemCd"> & {
@@ -101,6 +115,11 @@ export const itemService = {
   create(payload: CreateItemPayload): Promise<ApiResult<ItemDto>> {
     return apiClient.post<ItemDto>("/api/items/save", payload);
   },
+
+  createCdTblInfo(payload: CreateItemCdTblInfoPayload): Promise<ApiResult<CreateItemCdTblInfoPayload>> {
+    return apiClient.post<CreateItemCdTblInfoPayload>("/api/items/cdtbl/save", payload);
+  },
+
 
   /**
    * 아이템 정보 수정

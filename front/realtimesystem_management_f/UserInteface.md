@@ -15,6 +15,22 @@
 <img width="483" height="389" alt="image" src="https://github.com/user-attachments/assets/7566fda2-ce0a-4c81-9fae-d4295e7b7aa9" />
 <br>
 <br>
+<h2>3.아이템 관리</h2>
+<h3>스트림 서버 내부에서 가지고 다니는 json 덩어리에서 사용되는 항목들을 관리하는 화면</h3>
+<br>
+<img width="1742" height="398" alt="image" src="https://github.com/user-attachments/assets/587682ea-f28c-468c-9fff-3247d08f4844" />
+<br>
+<img width="436" height="532" alt="image" src="https://github.com/user-attachments/assets/3524a7b3-cd5b-47f9-8e0f-f51829370e5a" />
+<br>
+<br>
+<h2>4.아이템 코드 맵핑 화면</h2>
+<h3>등록된 아이템을 사용자가 코드 값을 보는 것이 아닌 의미있는 명칭으로 볼 수 있게 코드 맵핑 정보를 관리 하는 화면(LIST 형식만 제공, 후에 SQL 형식으로 제공)</h3>
+<br>
+<img width="1675" height="412" alt="image" src="https://github.com/user-attachments/assets/79e6e81b-eb95-4524-9ad4-f5b2b71c0035" />
+<br>
+<img width="473" height="518" alt="image" src="https://github.com/user-attachments/assets/ee6cae9a-1310-410a-bed3-63caa40c3571" />
+<br>
+<br>
 
 
  

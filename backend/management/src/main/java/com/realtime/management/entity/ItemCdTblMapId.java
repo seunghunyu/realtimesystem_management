@@ -14,10 +14,13 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class ItemCdTblMapId implements Serializable {
 
-    @Column(name = "item_nm")
-    private String itemNm;
-
     @Column(name = "cd_tbl_id")
     private String cdTblId;
+
+    @Column(name = "cd_id")
+    private String cdId;
+
+    @Column(name = "cd_nm")
+    private String cdNm;
 
 }

@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+
 @Getter
 @Builder
 public class ItemCdTblResponse {
@@ -15,11 +17,12 @@ public class ItemCdTblResponse {
     private String cdTblNm;
     private String cdTblDesc;
     private LocalDateTime createdAt;
-
+    
     public static ItemCdTblResponse from(ItemCdTblInfo itemCdTblInfo){
         return ItemCdTblResponse.builder()
                 .cdTblId(itemCdTblInfo.getCdTblId())
                 .cdTblNm(itemCdTblInfo.getCdTblNm())
+                .cdTblDesc(itemCdTblInfo.getCdTblDesc())
                 .createdAt(itemCdTblInfo.getCreatedAt())
                 .build();
     }

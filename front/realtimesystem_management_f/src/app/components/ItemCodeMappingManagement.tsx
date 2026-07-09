@@ -455,10 +455,10 @@ export function ItemCodeMappingManagement() {
   };
 
   const getCdTblInfo = async () => {
-    await itemService.list().then(res => {
+    await itemService.listCdTblInfno().then(res => {
       if (res.ok && res.data) {
         console.log("CdTblInfo:", res.data);
-        // setCdTblinfo(res.data);
+        setCdTblinfo(res.data);
       } else {
         console.error("Failed to fetch users:");
       }

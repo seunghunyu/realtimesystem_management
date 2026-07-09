@@ -31,6 +31,8 @@ export interface ItemTypeDto {
 export interface cdTblDto {
   cdTblId: string;
   cdTblNm: string;
+  cdTblDesc: string;
+  createdAt: string;
 }
 
 /** Body sent when registering a new system variable */
@@ -86,7 +88,16 @@ export const itemService = {
   listItemTypes(): Promise<ApiResult<ItemTypeDto[]>> {
     return apiClient.get<ItemTypeDto[]>("/api/items/types");
   },
+  
+  /**
+   * 아이템 타입 목록 조회
+   * GET /api/items/types
+   */
+  listCdTblInfno(): Promise<ApiResult<cdTblDto[]>> {
+    return apiClient.get<cdTblDto[]>("/api/items/list/cdtbls");
+  },
 
+  
   /**
    * 아이템 코드 테이블 목록 조회
    * GET /api/items/cdTbls
@@ -144,12 +155,24 @@ export const itemService = {
     return apiClient.delete<void>(`/api/items/${id}`);
   },
 
+  removeCdTbl(id: string): Promise<ApiResult<void>> {
+    return apiClient.delete<void>(`/api/items/cdtbl/${id}`);
+  },
+
+
+
   /**
    * 아이템 일괄 삭제
    * DELETE /api/items/:id  (순차 실행)
    * 모든 결과를 반환하므로 실패한 id만 재처리 가능.
    */
   async removeMany(ids: string[]): Promise<{ id: string; result: ApiResult<void> }[]> {
+    return Promise.all(
+      ids.map(async (id) => ({ id, result: await itemService.remove(id) }))
+    );
+  },
+
+  async removeManyCdTbls(ids: string[]): Promise<{ id: string; result: ApiResult<void> }[]> {
     return Promise.all(
       ids.map(async (id) => ({ id, result: await itemService.remove(id) }))
     );

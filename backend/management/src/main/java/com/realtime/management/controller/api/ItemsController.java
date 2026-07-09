@@ -1,6 +1,7 @@
 package com.realtime.management.controller.api;
 
 
+import com.realtime.management.dto.item.ItemCdTblRequest;
 import com.realtime.management.dto.item.ItemCdTblResponse;
 import com.realtime.management.dto.item.ItemRequest;
 import com.realtime.management.dto.item.ItemResponse;
@@ -25,20 +26,25 @@ public class ItemsController {
         return service.save(request);
     }
 
-    @PutMapping("/{role_cd}")
-    public ItemResponse update(@PathVariable String role_cd,
+    @PostMapping("/cdtbl/save")
+    public ItemCdTblResponse save(@Valid @RequestBody ItemCdTblRequest request){
+        return service.save(request);
+    }
+
+    @PutMapping("/{item_id}")
+    public ItemResponse update(@PathVariable String item_id,
                                 @RequestBody ItemRequest request){
-        return service.update(role_cd, request);
+        return service.update(item_id, request);
     }
 
-    @DeleteMapping("/{role_cd}")
-    public void delete(@PathVariable String role_cd){
-        service.delete(role_cd);
+    @DeleteMapping("/{item_id}")
+    public void delete(@PathVariable String item_id){
+        service.delete(item_id);
     }
 
-    @GetMapping("/{role_cd}")
-    public ItemResponse findById(@PathVariable String role_cd){
-        return service.findById(role_cd);
+    @GetMapping("/{item_id}")
+    public ItemResponse findById(@PathVariable String item_id){
+        return service.findById(item_id);
     }
 
     @GetMapping("/list")
@@ -50,7 +56,7 @@ public class ItemsController {
                 .toList();
     }
 
-    @GetMapping("/cdtbls")
+    @GetMapping("/list/cdtbls")
     public List<ItemCdTblResponse> findCdTbls(){
         List<ItemCdTblInfo> itemCdtbls = service.findCdTblAll();
 

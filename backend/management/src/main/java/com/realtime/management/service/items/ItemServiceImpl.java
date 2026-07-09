@@ -1,14 +1,15 @@
 package com.realtime.management.service.items;
 
+import com.realtime.management.dto.item.ItemCdTblRequest;
+import com.realtime.management.dto.item.ItemCdTblResponse;
 import com.realtime.management.dto.item.ItemRequest;
 import com.realtime.management.dto.item.ItemResponse;
 import com.realtime.management.dto.roles.RolesResponse;
-import com.realtime.management.entity.ItemCdTblInfo;
-import com.realtime.management.entity.Items;
-import com.realtime.management.entity.Roles;
+import com.realtime.management.entity.*;
 import com.realtime.management.exception.BusinessException;
 import com.realtime.management.exception.ErrorCode;
 import com.realtime.management.repository.ItemCdTblInfoRepository;
+import com.realtime.management.repository.ItemCdTblMapRepository;
 import com.realtime.management.repository.ItemsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ import java.util.List;
 public class ItemServiceImpl implements ItemService{
     private final ItemsRepository repository;
     private final ItemCdTblInfoRepository itemCdTblInfoRepository;
+    private final ItemCdTblMapRepository itemCdTblMapRepository;
+
     @Override
     public ItemResponse save(ItemRequest request) {
         if(repository.existsById(request.getItemNm())){
@@ -89,6 +92,43 @@ public class ItemServiceImpl implements ItemService{
     @Override
     public List<ItemCdTblInfo> findCdTblAll() {
         return itemCdTblInfoRepository.findAll();
+    }
+
+    @Override
+    public ItemCdTblResponse save(ItemCdTblRequest request) {
+        if(itemCdTblInfoRepository.existsById(request.getCdTblId())){
+            throw new BusinessException(ErrorCode.CDTBL_ALREADY_EXISTS);
+        }
+        String finalCdTblId = request.getCdTblId();
+        if (finalCdTblId == null || finalCdTblId.isBlank()) {
+            finalCdTblId = generateNextItemId();
+        }
+
+        ItemCdTblInfo cdTblInfo = ItemCdTblInfo.builder()
+                .cdTblId(finalCdTblId)
+                .cdTblNm(request.getCdTblNm())
+                .cdTblDesc(request.getCdTblDesc())
+                .build();
+
+        if(request.getCdTblInfo() != null && !request.getCdTblInfo().isEmpty()){
+            itemCdTblInfoRepository.save(cdTblInfo);
+            String cdTblId = finalCdTblId;
+            List<ItemCdTblMap> mapEntities = request.getCdTblInfo().stream()
+                    .map(info -> {
+                        ItemCdTblMapId mapId = ItemCdTblMapId.builder()
+                                .cdTblId(cdTblId)
+                                .cdId(info.getCdId())
+                                .cdNm(info.getCdNm())
+                                .build();
+                        return ItemCdTblMap.builder()
+                                .id(mapId)
+                                .itemCdTblInfo(cdTblInfo)
+                                .build();
+                    }).toList();
+            itemCdTblMapRepository.saveAll(mapEntities);
+        }
+
+        return ItemCdTblResponse.from(cdTblInfo);
     }
 
     // 💡 2. 다음 순번의 ID를 계산해내는 헬퍼 메서드

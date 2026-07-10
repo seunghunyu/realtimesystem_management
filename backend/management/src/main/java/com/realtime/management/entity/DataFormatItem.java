@@ -25,7 +25,7 @@ public class DataFormatItem {
     @Column(name = "field_type")
     private String fieldType;
 
-    @MapsId
+    @MapsId("formatId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "format_id")
     private DataFormatInfo dataFormatInfo;

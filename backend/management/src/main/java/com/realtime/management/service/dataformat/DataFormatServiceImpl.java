@@ -29,13 +29,13 @@ public class DataFormatServiceImpl implements DataFormatService{
         if(dataFormatRepository.existsById(request.getFormatId())){
             throw new BusinessException(ErrorCode.DEPT_ALREADY_EXISTS);
         }
-        String finalCdTblId = request.getFormatId();
-        if (finalCdTblId == null || finalCdTblId.isBlank()) {
-            finalCdTblId = generateNextItemId();
+        String finalFormatId = request.getFormatId();
+        if (finalFormatId == null || finalFormatId.isBlank()) {
+            finalFormatId = generateNextItemId();
         }
 
         DataFormatInfo dataFormatInfo = DataFormatInfo.builder()
-                .formatId(finalCdTblId)
+                .formatId(finalFormatId)
                 .formatNm(request.getFormatNm())
                 .formatDesc(request.getFormatDesc())
                 .createdAt(LocalDateTime.now())
@@ -43,7 +43,7 @@ public class DataFormatServiceImpl implements DataFormatService{
 
 
         if(request.getFieldInfos() != null && !request.getFieldInfos().isEmpty()){
-            String formatId = finalCdTblId;
+            String formatId = finalFormatId;
             List<DataFormatItem> mapEntities = request.getFieldInfos().stream()
                     .map(info -> {
                         DataFormatId mapId = DataFormatId.builder()

@@ -15,7 +15,8 @@ public class DataFormatResponse {
     private String formatId;
     private String formatNm;
     private String formatDesc;
-    private List<DataFormatItem> items;
+//    private List<DataFormatItem> items;
+    private List<DataFormatItemResponse> items;
     private LocalDateTime createdAt;
 
     public static DataFormatResponse from(DataFormatInfo info){
@@ -23,7 +24,10 @@ public class DataFormatResponse {
                 .formatId(info.getFormatId())
                 .formatNm(info.getFormatNm())
                 .formatDesc(info.getFormatDesc())
-                .items(info.getItems())
+//                .items(info.getItems())
+                .items(info.getItems() == null ? List.of() : info.getItems().stream()
+                        .map(DataFormatItemResponse::from)
+                        .toList())
                 .createdAt(info.getCreatedAt())
                 .build();
     }

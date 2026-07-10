@@ -52,7 +52,7 @@ interface DataItem {
   formatId: string;
   formatNm: string;
   formatDesc: string;
-  fieldInfo: FieldItem[];
+  fieldInfos: FieldItem[];
   createdAt: string;
   
 }
@@ -61,7 +61,7 @@ interface FormState {
   formatId:string;
   formatNm: string;
   formatDesc: string;
-  fieldInfo: FieldItem[];
+  fieldInfos: FieldItem[];
   createdAt: string;
 }
 
@@ -69,12 +69,12 @@ interface FormErrors {
   formatId?:string;
   formatNm?: string;
   formatDesc?: string;
-  fieldInfo?: string;
+  fieldInfos?: string;
   createdAt?: string;
 }
 
 const EMPTY_FORM: FormState = {
-  formatId: "", formatNm: "", formatDesc: "", fieldInfo: [], createdAt: ""
+  formatId: "", formatNm: "", formatDesc: "", fieldInfos: [], createdAt: ""
 };
 
 // ── helpers ────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ function today() {
 function validateForm(f: FormState): FormErrors {
   const e: FormErrors = {};
   if (!f.formatNm.trim()) e.formatNm = "데이터 포맷 명을 입력해주세요.";
-  if(f.fieldInfo.length == 0) e.fieldInfo = "데이터 포맷 형식을 채워주세요.";
+  if(f.fieldInfos.length == 0) e.fieldInfos = "데이터 포맷 형식을 채워주세요.";
   return e;
 }
 
@@ -149,6 +149,7 @@ function RegistrationModal({
   // JSON 파싱 적용 함수
   const handleApplyJson = () => {
     setJsonError("");
+
     if (!jsonInput.trim()) {
       setJsonError("JSON 문자열을 입력해주세요.");
       return;
@@ -156,24 +157,35 @@ function RegistrationModal({
 
     try {
       const parsed = JSON.parse(jsonInput);
-      if (!Array.isArray(parsed)) {
-        setJsonError("JSON은 반드시 배열 형태여야 합니다.");
+
+      // 예외 처리: 배열이 아니라 단일 객체("{}")인 경우 배열로 감싸줍니다.
+      const targetObj = Array.isArray(parsed) ? parsed[0] : parsed;
+
+      if (typeof targetObj !== "object" || targetObj === null) {
+        setJsonError("올바른 JSON 객체 형식이 아닙니다.");
         return;
       }
 
-      const formattedData = parsed.map(item => {
-        let type = String(item.fieldType || item.type || "STRING").toUpperCase();
-        if (type !== "STRING" && type !== "NUMERIC") type = "STRING";
+      // ⭐️ Object.entries를 이용해 { key: value } 구조를 [{ fieldNm, fieldVal, fieldType }] 구조로 가공
+      const formattedData = Object.entries(targetObj).map(([key, value]) => {
+        
+        // 💡 타입 자동 감지 로직
+        // value의 타입이 'number'이면 NUMERIC, 그 외엔 전부 STRING으로 판단
+        const detectedType = typeof value === "number" ? "NUMERIC" : "STRING";
 
         return {
-          fieldNm: String(item.fieldNm || item.code || item.cdId || ""),
-          fieldVal: String(item.fieldVal || item.value || item.cdNm || ""),
-          fieldType: type
+          fieldNm: key,                        // Key 값은 아이템 코드가 됨 (예: merchantId)
+          fieldVal: String(value ?? ""),       // Value 값은 벨류 텍스트가 됨 (예: MID_REALTIME_9912)
+          fieldType: detectedType              // 감지된 타입 세팅 (STRING 또는 NUMERIC)
         };
       });
 
-      set("fieldInfo", formattedData);
-      
+      // FormState의 fieldInfo에 가공된 배열 적용
+      setForm(prev => ({
+        ...prev,
+        fieldInfos: formattedData
+      }));
+
     } catch (error) {
       setJsonError("올바른 JSON 형식이 아닙니다. 문법을 확인해주세요.");
     }
@@ -195,12 +207,10 @@ function RegistrationModal({
       formatId: form.formatId.trim(),
       formatNm: form.formatNm.trim(),
       formatDesc: form.formatDesc,
-      fieldInfo: form.fieldInfo,
+      fieldInfos: form.fieldInfos,
       createdAt: form.createdAt
     });
     // ─────────────────────  ──────────────────────────────────
-
-  
 
     setLoading(false);
 
@@ -212,14 +222,14 @@ function RegistrationModal({
             formatId: result.data.formatId,
             formatNm: result.data.formatNm,
             formatDesc: result.data.formatDesc,
-            fieldInfo: result.data.fieldInfo,
+            fieldInfos: result.data.fieldInfos,
             createdAt: result.data.createdAt ?? today(),
           }
         : {
             formatId: form.formatId.trim(),
             formatNm: form.formatNm.trim(),
             formatDesc: form.formatDesc,
-            fieldInfo: form.fieldInfo,
+            fieldInfos: form.fieldInfos,
             createdAt: today(),
           };
 
@@ -248,7 +258,7 @@ function RegistrationModal({
     >
       {/* panel */}
       <div
-        className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden"
+        className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col overflow-hidden"
         style={{ maxHeight: "90vh" }}
       >
         {/* header */}
@@ -310,8 +320,8 @@ function RegistrationModal({
               <textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
-                placeholder={`[\n  { "fieldNm": "AGE", "fieldVal": "나이", "fieldType": "NUMERIC" },\n  { "fieldNm": "NAME", "fieldVal": "이름", "fieldType": "STRING" }\n]`}
-                className="w-full h-28 p-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 font-mono placeholder:text-neutral-600 focus:border-blue-500 focus:outline-none resize-none"
+                placeholder={`{\n  "merchantId": "MID_1234",\n  "amount": 15400,\n  "orderId": "ORD_01"\n}`}
+                className="w-full h-32 p-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 font-mono placeholder:text-neutral-600 focus:border-blue-500 focus:outline-none resize-none"
               />
               <button
                 type="button"
@@ -324,67 +334,65 @@ function RegistrationModal({
           </Field>      
           <hr className="border-neutral-800" />
 
-          {/* 3. ⭐️ 상세 항목 설정을 Field 안에 격리 배치 */}
-          <Field label={`포맷 항목 설정 (총 ${form.fieldInfo.length}건)`} required error={errors.fieldInfo}>
+          {/* 동적 항목 설정 테이블 구조 */}
+          <Field label={`포맷 항목 설정 (총 ${form.fieldInfos.length}건)`}>
             <div className="w-full space-y-3">
               
-              {/* 테이블 헤더 (5컬럼 레이아웃) */}
+              {/* 테이블 헤더 */}
               <div className="grid grid-cols-[60px_1fr_1fr_140px_40px] gap-2 px-2 text-xs font-semibold text-neutral-400">
                 <div className="text-center">인덱스</div>
                 <div>아이템 코드 (fieldNm)</div>
-                <div>벨류 (fieldVal)</div>
+                <div>기본 벨류 (fieldVal)</div>
                 <div>타입 (fieldType)</div>
                 <div></div>
               </div>
 
               {/* 테이블 본문 리스트 */}
-              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-                {form.fieldInfo.length === 0 ? (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {form.fieldInfos.length === 0 ? (
                   <div className="text-center py-8 text-sm text-neutral-500 border border-dashed border-neutral-800 rounded bg-neutral-950/50">
-                    등록된 항목 정보가 없습니다. JSON을 적용하거나 아래 버튼으로 추가하세요.
+                    JSON 페이로드를 붙여넣고 적용하면 필드들이 자동으로 추출됩니다.
                   </div>
                 ) : (
-                  form.fieldInfo.map((item, index) => (
+                  form.fieldInfos.map((item, index) => (
                     <div key={index} className="grid grid-cols-[60px_1fr_1fr_140px_40px] gap-2 items-center">
                       
-                      {/* 인덱스 표시 */}
+                      {/* 1. 인덱스 */}
                       <div className="text-center text-sm text-neutral-400 font-mono">
                         {index + 1}
                       </div>
 
-                      {/* 아이템 코드 인풋 */}
+                      {/* 2. 아이템 코드 인풋 */}
                       <input
                         type="text"
                         value={item.fieldNm}
                         onChange={e => {
-                          const updated = [...form.fieldInfo];
+                          const updated = [...form.fieldInfos];
                           updated[index].fieldNm = e.target.value;
-                          set("fieldInfo", updated);
+                          setForm(prev => ({ ...prev, fieldInfo: updated }));
                         }}
-                        placeholder="예: USER_AGE"
                         className="h-9 px-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 focus:border-blue-500 focus:outline-none"
                       />
 
-                      {/* 벨류 인풋 */}
+                      {/* 3. 벨류 인풋 */}
                       <input
                         type="text"
                         value={item.fieldVal}
                         onChange={e => {
-                          const updated = [...form.fieldInfo];
+                          const updated = [...form.fieldInfos];
                           updated[index].fieldVal = e.target.value;
-                          set("fieldInfo", updated);
+                          setForm(prev => ({ ...prev, fieldInfo: updated }));
                         }}
-                        placeholder="예: 사용자 나이"
                         className="h-9 px-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 focus:border-blue-500 focus:outline-none"
                       />
 
-                      {/* 타입 선택 콤보박스 (Select) */}
+                      {/* 4. 타입 선택 콤보박스 (Select) */}
                       <select
                         value={item.fieldType}
                         onChange={e => {
-                          const updated = [...form.fieldInfo];
+                          const updated = [...form.fieldInfos];
                           updated[index].fieldType = e.target.value;
-                          set("fieldInfo", updated);
+                          setForm(prev => ({ ...prev, fieldInfo: updated }));
                         }}
                         className="h-9 px-2 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 focus:border-blue-500 focus:outline-none cursor-pointer"
                       >
@@ -392,12 +400,12 @@ function RegistrationModal({
                         <option value="NUMERIC">NUMERIC</option>
                       </select>
 
-                      {/* 삭제 버튼 (✕) */}
+                      {/* 5. 삭제 버튼 */}
                       <button
                         type="button"
                         onClick={() => {
-                          const filtered = form.fieldInfo.filter((_, i) => i !== index);
-                          set("fieldInfo", filtered);
+                          const filtered = form.fieldInfos.filter((_, i) => i !== index);
+                          setForm(prev => ({ ...prev, fieldInfo: filtered }));
                         }}
                         className="h-9 w-9 flex items-center justify-center rounded border border-neutral-700 text-neutral-400 hover:text-rose-500 hover:border-rose-500 transition-colors"
                       >
@@ -408,21 +416,21 @@ function RegistrationModal({
                 )}
               </div>
 
-              {/* 항목 수동 추가 버튼 */}
+              {/* 수동 항목 추가 버튼 */}
               <button
                 type="button"
                 onClick={() => {
-                  set("fieldInfo", [
-                    ...form.fieldInfo,
-                    { fieldNm: "", fieldVal: "", fieldType: "STRING" }
-                  ]);
+                  setForm(prev => ({
+                    ...prev,
+                    fieldInfo: [...prev.fieldInfos, { fieldNm: "", fieldVal: "", fieldType: "STRING" }]
+                  }));
                 }}
                 className="w-full h-9 flex items-center justify-center rounded border border-dashed border-neutral-700 text-neutral-400 hover:text-blue-500 hover:border-blue-500 transition-colors text-sm font-medium bg-neutral-950/30"
               >
                 + 수동 항목 추가하기
               </button>
             </div>
-          </Field>    
+          </Field>
           <p className="text-neutral-600 text-xs pt-1">
             <span className="text-rose-400">*</span> 필수 입력 항목 
           </p>
@@ -651,7 +659,7 @@ export function DataFormatManagement() {
                     />
                   </TableHead>
                   {([
-                    { field: "formatId" as SortField, label: "데이터 포맷 아이디" },
+                    // { field: "formatId" as SortField, label: "데이터 포맷 아이디" },
                     { field: "formatNm" as SortField, label: "데이터 포맷 명" },
                   ]).map(col => (
                     <TableHead

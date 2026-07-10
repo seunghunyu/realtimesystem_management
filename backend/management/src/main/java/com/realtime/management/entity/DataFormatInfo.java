@@ -40,8 +40,11 @@ public class DataFormatInfo {
         this.formatNm = formatNm;
         this.formatDesc = formatDesc;
         this.items.clear();
-        if(items != null){
-            this.items.addAll(items);
+        if (items != null) {
+            for (DataFormatItem item : items) {
+                // 연관관계 편의 메서드 역할을 함께 수행하도록 강제
+                this.items.add(item);
+            }
         }
     }
 }

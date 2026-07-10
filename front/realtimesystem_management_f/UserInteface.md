@@ -31,7 +31,15 @@
 <img width="473" height="518" alt="image" src="https://github.com/user-attachments/assets/ee6cae9a-1310-410a-bed3-63caa40c3571" />
 <br>
 <br>
-
+<h2>5.데이터 포맷 관리 화면</h2>
+<h3>최초 유입데이터에서 어떤 데이터들을 파싱해서 사용할 건지를 미리 세팅하고 저장 관리 하는 화면</h3>
+<br>
+<img width="1747" height="408" alt="image" src="https://github.com/user-attachments/assets/0693d517-d9c1-4786-b647-2c98bc491e6b" />
+<br>
+<h3>미리 json 덩어리를 입력 후 json 적용 버튼 클릭 시 key value 형태로 세팅(depth처리 추후 개발 예정) </h3>
+<img width="688" height="710" alt="image" src="https://github.com/user-attachments/assets/397a2db4-7374-4ece-94e0-ae6653e8a859" />
+<br>
+<br>
 
  
 

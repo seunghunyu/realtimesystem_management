@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { userService } from "../services/userService";
+import { dataFService } from "../services/dataFService";
 import {
   Search,
   Filter,
@@ -41,66 +41,40 @@ import { Badge } from "./ui/badge";
 import { deptService, roleService } from "../services/codevalService";
 
 // ── types ──────────────────────────────────────────────────────
+
+interface FieldItem {
+  fieldNm: string;
+  fieldVal: string;
+  fieldType: string;
+}
+
 interface DataItem {
-  userId: string;
-  userName: string;
-  stat: "active" | "inactive" | "pending";
-  roleCd: string;
-  roleNm: string;
-  deptCd: string;
-  deptNm: string;
+  formatId: string;
+  formatNm: string;
+  formatDesc: string;
+  fieldInfo: FieldItem[];
   createdAt: string;
-  lastActive: string;
-  address?: string;
-}
-
-interface DeptItem{
-  deptCd: string;
-  deptNm: string;
-}
-
-interface RoleItem{
-  roleCd: string;
-  roleNm: string;
+  
 }
 
 interface FormState {
-  user_id : string;
-  user_name: string;
-  password: string;
-  confirmPassword: string;
-  address: string;
-  role_cd: string;
-  role_nm: string;
-  dept_cd: string;
-  dept_nm: string;
+  formatId:string;
+  formatNm: string;
+  formatDesc: string;
+  fieldInfo: FieldItem[];
+  createdAt: string;
 }
 
 interface FormErrors {
-  user_id?: string;
-  user_name?: string;
-  password?: string;
-  confirmPassword?: string;
-  address?: string;
-  role_cd?: string;
-  role_nm?: string;
-  dept_cd?: string; 
-  dept_nm?: string;
+  formatId?:string;
+  formatNm?: string;
+  formatDesc?: string;
+  fieldInfo?: string;
+  createdAt?: string;
 }
 
-// ── initial data ───────────────────────────────────────────────
-// const INITIAL_DATA: DataItem[] = [
-//   { user_id: "kim.chulsoo@company.com", user_name: "김철수",  stat: "active", role_cd: "개발자", dept_nm: "엔지니어링", joinDate: "2024-01-15", lastActive: "2분 전" },
-//   { user_id: "lee.younghee@company.com", user_name: "이영희",  stat: "active", role_cd: "디자이너", dept_nm: "디자인", joinDate: "2024-02-20", lastActive: "5분 전" },
-//   { user_id: "park.jimin@company.com", user_name: "박지민",  stat: "pending", role_cd: "마케터", dept_nm: "마케팅", joinDate: "2024-03-10", lastActive: "1시간 전" },
-// ];
-
-// const ROLES = ["개발자", "디자이너", "마케터", "프로젝트 매니저", "데이터 분석가", "UX 디자이너", "제품 매니저", "기타"];
-// const DEPARTMENTS = ["엔지니어링", "디자인", "마케팅", "애널리틱스", "제품", "기타"];
-
 const EMPTY_FORM: FormState = {
-  user_name: "", user_id: "", password: "", confirmPassword: "",
-  address: "", role_cd: "", role_nm: "", dept_cd: "", dept_nm: "",
+  formatId: "", formatNm: "", formatDesc: "", fieldInfo: [], createdAt: ""
 };
 
 // ── helpers ────────────────────────────────────────────────────
@@ -110,25 +84,8 @@ function today() {
 
 function validateForm(f: FormState): FormErrors {
   const e: FormErrors = {};
-  if (!f.user_name.trim()) e.user_name = "이름을 입력해주세요.";
-  if (!f.user_id.trim()) {
-    e.user_id = "이메일을 입력해주세요.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.user_id)) {
-    e.user_id = "올바른 이메일 형식이 아닙니다.";
-  }
-  if (!f.password) {
-    e.password = "비밀번호를 입력해주세요.";
-  } else if (f.password.length < 8) {
-    e.password = "비밀번호는 8자 이상이어야 합니다.";
-  }
-  if (!f.confirmPassword) {
-    e.confirmPassword = "비밀번호 확인을 입력해주세요.";
-  } else if (f.password !== f.confirmPassword) {
-    e.confirmPassword = "비밀번호가 일치하지 않습니다.";
-  }
-  if (!f.address.trim()) e.address = "주소를 입력해주세요.";
-  if (!f.role_cd) e.role_cd = "역할을 선택해주세요.";
-  if (!f.dept_nm) e.dept_nm = "부서를 선택해주세요.";
+  if (!f.formatNm.trim()) e.formatNm = "데이터 포맷 명을 입력해주세요.";
+  if(f.fieldInfo.length == 0) e.fieldInfo = "데이터 포맷 형식을 채워주세요.";
   return e;
 }
 
@@ -160,13 +117,9 @@ function Field({ label, required, error, children }: {
 function RegistrationModal({
   onClose,
   onSubmit,
-  departments,
-  roles,
 }: {
   onClose: () => void;
   onSubmit: (item: DataItem) => void;
-  departments: DeptItem[];
-  roles: RoleItem[];
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -174,11 +127,58 @@ function RegistrationModal({
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const set = (key: keyof FormState, value: string) => {
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonError, setJsonError] = useState("");
+  // const [fieldInfo, setFieldInfo] = useState([]);
+
+
+  const set = (key: keyof FormState, value: any) => {
     setForm(prev => ({ ...prev, [key]: value }));
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
     if (apiError) setApiError(null);
   };
+
+  // const setFieldInfo = (key: keyof FormState, value:any) => {
+  //   setForm(prev => ({
+  //     ...prev,
+  //     [key]: value
+  //   }));
+  // };
+
+
+  // JSON 파싱 적용 함수
+  const handleApplyJson = () => {
+    setJsonError("");
+    if (!jsonInput.trim()) {
+      setJsonError("JSON 문자열을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(jsonInput);
+      if (!Array.isArray(parsed)) {
+        setJsonError("JSON은 반드시 배열 형태여야 합니다.");
+        return;
+      }
+
+      const formattedData = parsed.map(item => {
+        let type = String(item.fieldType || item.type || "STRING").toUpperCase();
+        if (type !== "STRING" && type !== "NUMERIC") type = "STRING";
+
+        return {
+          fieldNm: String(item.fieldNm || item.code || item.cdId || ""),
+          fieldVal: String(item.fieldVal || item.value || item.cdNm || ""),
+          fieldType: type
+        };
+      });
+
+      set("fieldInfo", formattedData);
+      
+    } catch (error) {
+      setJsonError("올바른 JSON 형식이 아닙니다. 문법을 확인해주세요.");
+    }
+  };
+
 
   const handleSubmit = async () => {
     const errs = validateForm(form);
@@ -191,15 +191,16 @@ function RegistrationModal({
     setApiError(null);
 
     // ── REST 요청: POST /api/users ──────────────────────────
-    const result = await userService.create({
-      userId: form.user_id.trim(),
-      userName: form.user_name.trim(),
-      password: form.password,
-      roleCd: form.role_cd,
-      deptNm: form.dept_nm,
-      address: form.address.trim(),
+    const result = await dataFService.create({
+      formatId: form.formatId.trim(),
+      formatNm: form.formatNm.trim(),
+      formatDesc: form.formatDesc,
+      fieldInfo: form.fieldInfo,
+      createdAt: form.createdAt
     });
-    // ───────────────────────────────────────────────────────
+    // ─────────────────────  ──────────────────────────────────
+
+  
 
     setLoading(false);
 
@@ -208,28 +209,18 @@ function RegistrationModal({
     const newItem: DataItem =
       result.ok && result.data
         ? {
-            userId: result.data.userId,
-            userName: result.data.userName,
-            stat: result.data.stat ?? "pending",
-            roleCd: result.data.roleCd,
-            roleNm: result.data.roleNm,
-            deptCd: result.data.deptCd,
-            deptNm: result.data.deptNm,
-            address: result.data.address,
+            formatId: result.data.formatId,
+            formatNm: result.data.formatNm,
+            formatDesc: result.data.formatDesc,
+            fieldInfo: result.data.fieldInfo,
             createdAt: result.data.createdAt ?? today(),
-            lastActive: result.data.lastActive ?? "방금 전",
           }
         : {
-            userId: form.user_id.trim(),
-            userName: form.user_name.trim(),
-            stat: "pending",
-            roleCd: form.role_cd,
-            roleNm: form.role_nm,
-            deptCd: form.dept_cd,
-            deptNm: form.dept_nm,
-            address: form.address.trim(),
+            formatId: form.formatId.trim(),
+            formatNm: form.formatNm.trim(),
+            formatDesc: form.formatDesc,
+            fieldInfo: form.fieldInfo,
             createdAt: today(),
-            lastActive: "방금 전",
           };
 
     if (!result.ok) {
@@ -263,8 +254,8 @@ function RegistrationModal({
         {/* header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800 shrink-0">
           <div>
-            <h2 className="text-neutral-50 text-lg font-semibold">회원가입 신청</h2>
-            <p className="text-neutral-500 text-xs mt-0.5">새로운 사용자를 등록합니다</p>
+            <h2 className="text-neutral-50 text-lg font-semibold">Data Format 등록</h2>
+            <p className="text-neutral-500 text-xs mt-0.5">Data Format을 등록합니다</p>
           </div>
           <button
             onClick={onClose}
@@ -279,116 +270,161 @@ function RegistrationModal({
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-900/95 rounded-2xl gap-3">
             <CheckmarkFilled size={48} className="text-green-400" />
             <p className="text-neutral-50 font-semibold text-lg">등록 완료!</p>
-            <p className="text-neutral-400 text-sm">사용자 목록에 추가되었습니다.</p>
+            <p className="text-neutral-400 text-sm">DataFormat 목록에 추가되었습니다.</p>
           </div>
         )}
 
         {/* form body */}
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4 relative" style={{ maxHeight: "60vh" }}>
 
-          <Field label="이름" required error={errors.user_name}>
+          <Field label="데이터 포맷 명" required error={errors.formatNm}>
             <Input
-              value={form.user_name}
-              onChange={e => set("user_name", e.target.value)}
-              placeholder="홍길동"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_name ? "border-rose-500" : ""}`}
+              value={form.formatNm}
+              onChange={e => set("formatNm", e.target.value)}
+              placeholder="카드결제 데이터 payload"
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.formatNm ? "border-rose-500" : ""}`}
             />
           </Field>
 
-          <Field label="아이디" required error={errors.user_id}>
+          {/* <Field label="아이디" required error={errors.formatId}>
             <Input
               type="email"
-              value={form.user_id}
-              onChange={e => set("user_id", e.target.value)}
-              placeholder="example@company.com"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_id ? "border-rose-500" : ""}`}
+              value={form.formatId}
+              onChange={e => set("formatId", e.target.value)}
+              placeholder="DF000001"
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.formatId ? "border-rose-500" : ""}`}
             />
-          </Field>
+          </Field> */}
 
-          <Field label="비밀번호" required error={errors.password}>
+          <Field label="데이터 포맷 설명" required error={errors.formatDesc}>
             <Input
-              type="password"
-              value={form.password}
-              onChange={e => set("password", e.target.value)}
-              placeholder="8자 이상"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.password ? "border-rose-500" : ""}`}
+              value={form.formatDesc}
+              onChange={e => set("formatDesc", e.target.value)}
+              placeholder="카드결제 데이터 payload를 담아 놓은 형식"
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.formatDesc ? "border-rose-500" : ""}`}
             />
           </Field>
-
-          <Field label="비밀번호 확인" required error={errors.confirmPassword}>
-            <Input
-              type="password"
-              value={form.confirmPassword}
-              onChange={e => set("confirmPassword", e.target.value)}
-              placeholder="비밀번호 재입력"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.confirmPassword ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          {/* password strength */}
-          {form.password && (
-            <div className="flex items-center gap-2 -mt-1">
-              {[1, 2, 3, 4].map(i => {
-                const strength = Math.min(
-                  4,
-                  (form.password.length >= 8 ? 1 : 0) +
-                  (/[A-Z]/.test(form.password) ? 1 : 0) +
-                  (/[0-9]/.test(form.password) ? 1 : 0) +
-                  (/[^A-Za-z0-9]/.test(form.password) ? 1 : 0)
-                );
-                const colors = ["bg-rose-500", "bg-amber-500", "bg-yellow-400", "bg-green-400"];
-                return (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= strength ? colors[strength - 1] : "bg-neutral-800"}`}
-                  />
-                );
-              })}
-              <span className="text-xs text-neutral-500 shrink-0">
-                {["", "취약", "보통", "강함", "매우 강함"][
-                  Math.min(4, (form.password.length >= 8 ? 1 : 0) +
-                  (/[A-Z]/.test(form.password) ? 1 : 0) +
-                  (/[0-9]/.test(form.password) ? 1 : 0) +
-                  (/[^A-Za-z0-9]/.test(form.password) ? 1 : 0))
-                ]}
-              </span>
+          {/* 2. JSON 대량 입력 Field */}
+          <Field label="JSON 대량 입력 (선택)" error={jsonError}>
+            <div className="space-y-2 w-full">
+              <textarea
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                placeholder={`[\n  { "fieldNm": "AGE", "fieldVal": "나이", "fieldType": "NUMERIC" },\n  { "fieldNm": "NAME", "fieldVal": "이름", "fieldType": "STRING" }\n]`}
+                className="w-full h-28 p-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 font-mono placeholder:text-neutral-600 focus:border-blue-500 focus:outline-none resize-none"
+              />
+              <button
+                type="button"
+                onClick={handleApplyJson}
+                className="px-4 h-9 text-sm font-medium bg-blue-600 hover:bg-blue-500 rounded text-white transition-colors"
+              >
+                JSON 적용하기
+              </button>
             </div>
-          )}
+          </Field>      
+          <hr className="border-neutral-800" />
 
-          {/* address */}
-          <Field label="주소" required error={errors.address}>
-            <Input
-              value={form.address}
-              onChange={e => set("address", e.target.value)}
-              placeholder="서울특별시 강남구 테헤란로 123"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.address ? "border-rose-500" : ""}`}
-            />
-          </Field>
+          {/* 3. ⭐️ 상세 항목 설정을 Field 안에 격리 배치 */}
+          <Field label={`포맷 항목 설정 (총 ${form.fieldInfo.length}건)`} required error={errors.fieldInfo}>
+            <div className="w-full space-y-3">
+              
+              {/* 테이블 헤더 (5컬럼 레이아웃) */}
+              <div className="grid grid-cols-[60px_1fr_1fr_140px_40px] gap-2 px-2 text-xs font-semibold text-neutral-400">
+                <div className="text-center">인덱스</div>
+                <div>아이템 코드 (fieldNm)</div>
+                <div>벨류 (fieldVal)</div>
+                <div>타입 (fieldType)</div>
+                <div></div>
+              </div>
 
-          <Field label="역할" required error={errors.role_cd}>
-            <Select value={form.role_cd} onValueChange={v => set("role_cd", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.role_cd ? "border-rose-500" : ""}`}>
-                <SelectValue placeholder="역할 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map(r => <SelectItem key={r.roleCd} value={r.roleNm}>{r.roleNm}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </Field>
+              {/* 테이블 본문 리스트 */}
+              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                {form.fieldInfo.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-neutral-500 border border-dashed border-neutral-800 rounded bg-neutral-950/50">
+                    등록된 항목 정보가 없습니다. JSON을 적용하거나 아래 버튼으로 추가하세요.
+                  </div>
+                ) : (
+                  form.fieldInfo.map((item, index) => (
+                    <div key={index} className="grid grid-cols-[60px_1fr_1fr_140px_40px] gap-2 items-center">
+                      
+                      {/* 인덱스 표시 */}
+                      <div className="text-center text-sm text-neutral-400 font-mono">
+                        {index + 1}
+                      </div>
 
-          <Field label="부서" required error={errors.dept_nm}>
-            <Select value={form.dept_nm} onValueChange={v => set("dept_nm", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.dept_nm ? "border-rose-500" : ""}`}>
-                <SelectValue placeholder="부서 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </Field>
+                      {/* 아이템 코드 인풋 */}
+                      <input
+                        type="text"
+                        value={item.fieldNm}
+                        onChange={e => {
+                          const updated = [...form.fieldInfo];
+                          updated[index].fieldNm = e.target.value;
+                          set("fieldInfo", updated);
+                        }}
+                        placeholder="예: USER_AGE"
+                        className="h-9 px-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 focus:border-blue-500 focus:outline-none"
+                      />
 
+                      {/* 벨류 인풋 */}
+                      <input
+                        type="text"
+                        value={item.fieldVal}
+                        onChange={e => {
+                          const updated = [...form.fieldInfo];
+                          updated[index].fieldVal = e.target.value;
+                          set("fieldInfo", updated);
+                        }}
+                        placeholder="예: 사용자 나이"
+                        className="h-9 px-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 focus:border-blue-500 focus:outline-none"
+                      />
+
+                      {/* 타입 선택 콤보박스 (Select) */}
+                      <select
+                        value={item.fieldType}
+                        onChange={e => {
+                          const updated = [...form.fieldInfo];
+                          updated[index].fieldType = e.target.value;
+                          set("fieldInfo", updated);
+                        }}
+                        className="h-9 px-2 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 focus:border-blue-500 focus:outline-none cursor-pointer"
+                      >
+                        <option value="STRING">STRING</option>
+                        <option value="NUMERIC">NUMERIC</option>
+                      </select>
+
+                      {/* 삭제 버튼 (✕) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const filtered = form.fieldInfo.filter((_, i) => i !== index);
+                          set("fieldInfo", filtered);
+                        }}
+                        className="h-9 w-9 flex items-center justify-center rounded border border-neutral-700 text-neutral-400 hover:text-rose-500 hover:border-rose-500 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* 항목 수동 추가 버튼 */}
+              <button
+                type="button"
+                onClick={() => {
+                  set("fieldInfo", [
+                    ...form.fieldInfo,
+                    { fieldNm: "", fieldVal: "", fieldType: "STRING" }
+                  ]);
+                }}
+                className="w-full h-9 flex items-center justify-center rounded border border-dashed border-neutral-700 text-neutral-400 hover:text-blue-500 hover:border-blue-500 transition-colors text-sm font-medium bg-neutral-950/30"
+              >
+                + 수동 항목 추가하기
+              </button>
+            </div>
+          </Field>    
           <p className="text-neutral-600 text-xs pt-1">
-            <span className="text-rose-400">*</span> 필수 입력 항목 / 가입 후 상태는 <span className="text-yellow-500">대기중</span>으로 설정됩니다.
+            <span className="text-rose-400">*</span> 필수 입력 항목 
           </p>
 
           {apiError && (
@@ -423,7 +459,7 @@ function RegistrationModal({
             ) : (
               <>
                 <AddLarge size={14} />
-                회원가입 신청
+                데이터 포맷 등록
               </>
             )}
           </button>
@@ -438,28 +474,22 @@ type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
 export function DataFormatManagement() {
-  const [users, setUsers] = useState<DataItem[]>([]);
-  const [departments, setDepartments] = useState<DeptItem[]>([]);
-  const [roles, setRoles] = useState<RoleItem[]>([]);
-
+  const [dataFormat, setDataFormat] = useState<DataItem[]>([]);
   const [showModal, setShowModal] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>("userName");
+  const [sortField, setSortField] = useState<SortField>("formatNm");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const filteredAndSortedData = useMemo(() => {
-    const filtered = users.filter(item => {
+    const filtered = dataFormat.filter(item => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = item.userName.toLowerCase().includes(q) ||
-        item.userId.toLowerCase().includes(q) ||
-        item.roleCd.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "all" || item.stat === statusFilter;
-      const matchesDept = departmentFilter === "all" || item.deptNm === departmentFilter;
-      return matchesSearch && matchesStatus && matchesDept;
+      const matchesSearch = item.formatNm.toLowerCase().includes(q) ||
+        item.formatId.toLowerCase().includes(q) 
+      return matchesSearch ;
     });
 
     filtered.sort((a, b) => {
@@ -470,7 +500,7 @@ export function DataFormatManagement() {
       return 0;
     });
     return filtered;
-  }, [users, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
+  }, [dataFormat, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
 
   // const departments = Array.from(new Set(users.map(u => u.dept_nm)));
   // const roles = Array.from(new Set(users.map(u => u.role_cd)));
@@ -482,7 +512,7 @@ export function DataFormatManagement() {
 
   const toggleSelectAll = () => {
     if (selectedItems.size === filteredAndSortedData.length) setSelectedItems(new Set());
-    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.userId)));
+    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.formatId)));
   };
 
   const toggleSelectItem = (id: string) => {
@@ -496,66 +526,35 @@ export function DataFormatManagement() {
   const deleteSelected = async () => {
     const ids = Array.from(selectedItems);
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => !selectedItems.has(u.userId)));
+    setDataFormat(prev => prev.filter(u => !selectedItems.has(u.formatId)));
     setSelectedItems(new Set());
     // REST 요청: DELETE /api/users/:id (병렬)
-    await userService.removeMany(ids);
+    await dataFService.removeMany(ids);
   };
 
-  const deleteUser = async (id: string) => {
+  const deleteFormat = async (id: string) => {
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => u.userId !== id));
+    setDataFormat(prev => prev.filter(u => u.formatId !== id));
     setSelectedItems(prev => { const n = new Set(prev); n.delete(id); return n; });
     // REST 요청: DELETE /api/users/:id
-    await userService.remove(id);
+    await dataFService.remove(id);
   };
 
-  const addUser = (item: DataItem) => {
-    setUsers(prev => [item, ...prev]);
+  const addDataFormat = (item: DataItem) => {
+    setDataFormat(prev => [item, ...prev]);
   };
 
-  const getUsers = async () => {
-    await userService.list().then(res => {
+  const getDataFormat = async () => {
+    await dataFService.list().then(res => {
       if (res.ok && res.data) {
-        console.log("Users:", res.data);
-        setUsers(res.data);
+        console.log("DataFormats:", res.data);
+        setDataFormat(res.data);
       } else {
-        console.error("Failed to fetch users:");
+        console.error("Failed to fetch DataFormats:");
       }
     });
   };
 
-  const getRoles = async () => {
-    await roleService.list().then(res => {
-      if (res.ok && res.data) {
-        console.log("Roles:", res.data);
-        setRoles(res.data);
-      } else {
-        console.error("Failed to fetch roles:");
-      }
-    });
-  };
-
-  const getDepts = async () => {
-    await deptService.list().then(res => {
-      if (res.ok && res.data) {
-        console.log("Departments:", res.data);
-        setDepartments(res.data);
-      } else {
-        console.error("Failed to fetch departments:");
-      }
-    });
-  };
-
-
-  const getStatusBadge = (stat: string) => {
-    switch (stat) {
-      case "active":  return <Badge className="bg-green-600 hover:bg-green-700 text-xs">활성</Badge>;
-      case "inactive":return <Badge className="bg-neutral-600 hover:bg-neutral-700 text-xs">비활성</Badge>;
-      case "pending": return <Badge className="bg-yellow-600 hover:bg-yellow-700 text-xs">대기중</Badge>;
-      default:        return <Badge className="text-xs">{stat}</Badge>;
-    }
-  };
 
   const SortIcon = ({ field }: { field: SortField }) =>
     sortField === field
@@ -563,9 +562,7 @@ export function DataFormatManagement() {
       : null;
 
   useEffect( () => {
-    getRoles(); //역할 정보
-    getDepts(); //부서 정보
-    getUsers(); //사용자 정보
+    getDataFormat(); //사용자 정보
   }, []); // []로 두면 컴포넌트가 처음 켜질 때 한번만 실행
 
 
@@ -575,9 +572,7 @@ export function DataFormatManagement() {
       {showModal && (
         <RegistrationModal
           onClose={() => setShowModal(false)}
-          onSubmit={addUser}
-          departments={departments} 
-          roles={roles}
+          onSubmit={addDataFormat}
         />
       )}
 
@@ -606,31 +601,6 @@ export function DataFormatManagement() {
 
               {/* filters + actions */}
               <div className="flex gap-2 items-center flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Filter size={14} className="text-neutral-500" />
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-9 w-[130px] bg-neutral-950 border-neutral-800 text-neutral-50 text-sm">
-                      <SelectValue placeholder="상태" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">모든 상태</SelectItem>
-                      <SelectItem value="active">활성</SelectItem>
-                      <SelectItem value="inactive">비활성</SelectItem>
-                      <SelectItem value="pending">대기중</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                  <SelectTrigger className="h-9 w-[150px] bg-neutral-950 border-neutral-800 text-neutral-50 text-sm">
-                    <SelectValue placeholder="부서" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">모든 부서</SelectItem>
-                    {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-
                 <button
                   onClick={() => setShowModal(true)}
                   className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-2 transition-colors"
@@ -638,22 +608,6 @@ export function DataFormatManagement() {
                   <AddLarge size={15} />
                   새로운 항목
                 </button>
-
-                {/* <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="h-9 px-3 rounded-lg border border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-neutral-50 hover:bg-neutral-900 transition-colors flex items-center">
-                      <OverflowMenuHorizontal size={16} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>
-                      <Download size={14} className="mr-2" />내보내기
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setUsers(INITIAL_DATA)}>
-                      <Renew size={14} className="mr-2" />초기화
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu> */}
               </div>
             </div>
 
@@ -697,8 +651,8 @@ export function DataFormatManagement() {
                     />
                   </TableHead>
                   {([
-                    { field: "name" as SortField, label: "이름" },
-                    { field: "email" as SortField, label: "이메일" },
+                    { field: "formatId" as SortField, label: "데이터 포맷 아이디" },
+                    { field: "formatNm" as SortField, label: "데이터 포맷 명" },
                   ]).map(col => (
                     <TableHead
                       key={col.field}
@@ -711,45 +665,28 @@ export function DataFormatManagement() {
                       </div>
                     </TableHead>
                   ))}
-                  <TableHead className="text-neutral-400">상태</TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("roleCd")}
-                  >
-                    <div className="flex items-center gap-1">역할<SortIcon field="roleCd" /></div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("deptNm")}
-                  >
-                    <div className="flex items-center gap-1">부서<SortIcon field="deptNm" /></div>
-                  </TableHead>
-                  <TableHead className="text-neutral-400">가입일</TableHead>
-                  <TableHead className="text-neutral-400">최근 활동</TableHead>
+                  <TableHead className="text-neutral-400">데이터 포맷 설명</TableHead>
+                  <TableHead className="text-neutral-400">생성일</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAndSortedData.map(item => (
                   <TableRow
-                    key={item.userId}
+                    key={item.formatId}
                     className="border-neutral-800 hover:bg-neutral-800/40 transition-colors"
                   >
                     <TableCell>
                       <input
                         type="checkbox"
-                        checked={selectedItems.has(item.userId)}
-                        onChange={() => toggleSelectItem(item.userId)}
+                        checked={selectedItems.has(item.formatId)}
+                        onChange={() => toggleSelectItem(item.formatId)}
                         className="w-4 h-4 rounded border-neutral-600 bg-neutral-950 accent-blue-500"
                       />
                     </TableCell>
-                    <TableCell className="text-neutral-50 font-medium">{item.userName}</TableCell>
-                    <TableCell className="text-neutral-400 text-sm">{item.userId}</TableCell>
-                    <TableCell>{getStatusBadge(item.stat)}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.roleCd}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.deptNm}</TableCell>
+                    <TableCell className="text-neutral-200 font-medium">{item.formatNm}</TableCell>
+                    <TableCell className="text-neutral-500 text-sm">{item.formatDesc}</TableCell>
                     <TableCell className="text-neutral-500 text-sm">{item.createdAt}</TableCell>
-                    <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -763,7 +700,7 @@ export function DataFormatManagement() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-rose-400 focus:text-rose-400"
-                            onClick={() => deleteUser(item.userId)}
+                            onClick={() => deleteFormat(item.formatId)}
                           >
                             <TrashCan size={13} className="mr-2" />삭제
                           </DropdownMenuItem>

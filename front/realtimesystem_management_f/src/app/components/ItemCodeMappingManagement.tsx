@@ -51,7 +51,6 @@ interface DataItem {
   cdTblId: string;
   cdTblNm: string;
   cdTblDesc: string;
-  cdTblInfo: CodeValueItem[];
   createdAt: string;
 }
 
@@ -163,14 +162,12 @@ function RegistrationModal({
             cdTblId: result.data.cdTblId,
             cdTblNm: result.data.cdTblNm,
             cdTblDesc: result.data.cdTblDesc,
-            cdTblInfo: result.data.cdTblInfo,
             createdAt: result.data.createdAt ?? today()
           }
         : {
             cdTblId: form.cdTblId.trim(),
             cdTblNm: form.cdTblNm.trim(),
             cdTblDesc: form.cdTblDesc,
-            cdTblInfo: form.cdTblInfo,
             createdAt: today()
           };
 

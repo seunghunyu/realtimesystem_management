@@ -90,8 +90,8 @@ export const itemService = {
   },
   
   /**
-   * 아이템 타입 목록 조회
-   * GET /api/items/types
+   * 아이템 코드 맵핑 정보 리스트 조회
+   * GET /api/items/list/cdtbls
    */
   listCdTblInfno(): Promise<ApiResult<cdTblDto[]>> {
     return apiClient.get<cdTblDto[]>("/api/items/list/cdtbls");

@@ -17,7 +17,7 @@ public class ItemCdTblResponse {
     private String cdTblNm;
     private String cdTblDesc;
     private LocalDateTime createdAt;
-    
+
     public static ItemCdTblResponse from(ItemCdTblInfo itemCdTblInfo){
         return ItemCdTblResponse.builder()
                 .cdTblId(itemCdTblInfo.getCdTblId())

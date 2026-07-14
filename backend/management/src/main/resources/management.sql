@@ -89,3 +89,58 @@ CREATE TABLE data_format_item (
     CONSTRAINT pk_data_format_item PRIMARY KEY (format_id, field_nm),
     CONSTRAINT fk_format_item_id FOREIGN KEY (format_id) REFERENCES data_format_info (format_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 10.필터 조건 테이블
+create table filter_condition(
+	filter_id varchar(48) not null,
+	filter_nm varchar(128) not null,
+	filter_desc varchar(256),
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT pk_filter_condition PRIMARY KEY (filter_id)
+);
+
+-- 11.필터 조건 정보
+create table filter_condition_info(
+	filter_id varchar(48) not null,
+	seq integer not null,
+	info varchar(4000) not null,
+	CONSTRAINT pk_filter_condition_info PRIMARY KEY (filter_id, seq)
+);
+
+
+-- 12. 캠페인 기본정보 테이블
+create table camp (
+	camp_id varchar(48) not null,
+	camp_nm varchar(128) not null,
+	camp_desc varchar(128),
+	camp_type varchar(24) default 'real', -- batch, real
+	camp_stat varchar(24) default '100',
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT pk_camp PRIMARY KEY (camp_id)
+);
+
+-- 13. 컴포넌트 정보 테이블
+create table component(
+	cmpnt_id varchar(48) not null,
+	cmpnt_nm varchar(128),
+	cmpnt_desc varchar(256),
+	camp_id varchar(48) not null,
+	from_cmpnt_id varchar(48) not null,
+	CONSTRAINT pk_component PRIMARY KEY (cmpnt_id, camp_id)
+);
+
+-- 14. 컴포넌트별 데이터 포맷
+create table camp_data_format(
+	cmpnt_id varchar(48) not null,
+	camp_id varchar(48) not null,
+	format_id VARCHAR(255) not null,
+	CONSTRAINT pk_camp_data_format PRIMARY KEY (cmpnt_id, camp_id, format_id)
+);
+
+-- 15. 컴포넌트별 필터 조건
+create table camp_filter_condition(
+	cmpnt_id varchar(48) not null,
+	camp_id varchar(48) not null,
+	filter_id varchar(128) not null,
+	CONSTRAINT pk_camp_filter_condition PRIMARY KEY (cmpnt_id, camp_id, filter_id)
+)

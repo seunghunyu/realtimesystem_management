@@ -47,6 +47,9 @@
 <br>
 <img width="495" height="585" alt="image" src="https://github.com/user-attachments/assets/a84f5d5c-684f-41d6-a976-7d331760ac6c" />
 <br>
+<h3>기본 정보 입력 후 설계 페이지로 이동할지에 대한 팝업</h3>
+<img width="805" height="595" alt="image" src="https://github.com/user-attachments/assets/3345ebc8-5c21-4b62-ac4d-2cca1298e0eb" />
+<br>
 <br>
  
 

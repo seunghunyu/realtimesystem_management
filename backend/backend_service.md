@@ -1,6 +1,6 @@
 # 관리 서버 
 ERD 구성<br>
-<img width="1208" height="734" alt="image" src="https://github.com/user-attachments/assets/7a72d0c1-2220-4950-be98-da74b4dd1301" />
+<img width="1217" height="734" alt="image" src="https://github.com/user-attachments/assets/5a66710d-77ab-427a-afdc-e4116923193c" />
 <h3>1.users</h3>
  사용자 테이블
 <br><br>
@@ -45,6 +45,12 @@ ERD 구성<br>
 <br><br>    
 <h3>15.camp_filter_condition </h3>
  컴포넌트에서 사용된 필터 정보
+<br><br>    
+<h3>16.camp_brch </h3>
+ 캠페인 분류
+<br><br>    
+<h3>camp_scnd_brch </h3>
+ 캠페인 2차 분류
 <br><br>    
 
 

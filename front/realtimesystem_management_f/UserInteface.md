@@ -40,7 +40,14 @@
 <img width="688" height="710" alt="image" src="https://github.com/user-attachments/assets/397a2db4-7374-4ece-94e0-ae6653e8a859" />
 <br>
 <br>
-
+h2>6.캠페인 관리 화면</h2>
+<h3>사용할 캠페인을 등록하고 관리 하는 화면</h3>
+<br>
+<img width="1175" height="367" alt="image" src="https://github.com/user-attachments/assets/9853bc08-a792-4696-b979-ee7aaf01e0f9" />
+<br>
+<img width="495" height="585" alt="image" src="https://github.com/user-attachments/assets/a84f5d5c-684f-41d6-a976-7d331760ac6c" />
+<br>
+<br>
  
 
   

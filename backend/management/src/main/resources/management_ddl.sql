@@ -113,6 +113,8 @@ create table camp (
 	camp_id varchar(48) not null,
 	camp_nm varchar(128) not null,
 	camp_desc varchar(128),
+	camp_brch1 varchar(48), -- 1차 분류
+	camp_brch2 varchar(48), -- 2차 분류
 	camp_type varchar(24) default 'real', -- batch, real
 	camp_stat varchar(24) default '100',
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -144,3 +146,20 @@ create table camp_filter_condition(
 	filter_id varchar(128) not null,
 	CONSTRAINT pk_camp_filter_condition PRIMARY KEY (cmpnt_id, camp_id, filter_id)
 )
+
+-- 16. 캠페인 1차 분류
+create table camp_brch(
+	brch_cd varchar(12) not null,
+	brch_nm varchar(48) not null,
+	use_cd varchar(1) not null,
+	CONSTRAINT pk_camp_brch PRIMARY KEY (brch_cd)
+);
+
+-- 17. 캠페인 2차 분류
+create table camp_scnd_brch(
+	scnd_brch_cd varchar(12) not null,
+	scnd_brch_nm varchar(48) not null,
+	brch_cd varchar(128) not null,
+	use_cd varchar(1) not null,
+	CONSTRAINT pk_camp_scnd_brch PRIMARY KEY (scnd_brch_cd, brch_cd)
+);

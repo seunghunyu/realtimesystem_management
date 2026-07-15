@@ -25,7 +25,7 @@ public class CampResponse {
     public static CampResponse from(Camp camp){
         return CampResponse.builder()
                 .campId(camp.getCampId())
-                .campNm(camp.getCampName())
+                .campNm(camp.getCampNm())
                 .campDesc(camp.getCampDesc())
                 .createdAt(camp.getCreatedAt())
                 .build();

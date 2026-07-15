@@ -1,5 +1,6 @@
 package com.realtime.management.entity;
 
+import com.realtime.management.dto.camp.CampRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,10 +20,16 @@ public class Camp {
     private String campId;
 
     @Column(name = "camp_nm")
-    private String campName;
+    private String campNm;
 
     @Column(name = "camp_desc")
     private String campDesc;
+
+    @Column(name = "camp_brch1")
+    private String campBrch1;
+
+    @Column(name = "camp_brch2")
+    private String campBrch2;
 
     @Column(name = "camp_type")
     @Builder.Default
@@ -36,9 +43,12 @@ public class Camp {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public void update(String campName, String campStat, String campDesc){
-        this.campName = campName;
-        this.campStat = campStat;
-        this.campDesc = campDesc;
+//    public void update(String campName, String campStat, String campDesc, String campBrch1, String campBrch2){
+    public void update(CampRequest request){
+        this.campNm = request.getCampNm();
+        this.campStat = request.getCampStat();
+        this.campDesc = request.getCampDesc();
+        this.campBrch1 = request.getCampBrch1();
+        this.campBrch2 = request.getCampBrch2();
     }
 }

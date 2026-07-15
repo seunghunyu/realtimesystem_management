@@ -35,7 +35,15 @@ public enum ErrorCode {
 
     // DataFormat
     DF_NOT_FOUND(HttpStatus.NOT_FOUND, "DF001", "데이터 포맷 정보를 찾을 수 없습니다."),
-    DF_ALREADY_EXISTS(HttpStatus.CONFLICT, "DF002", "이미 존재하는 데이터 포맷 정보입니다.");
+    DF_ALREADY_EXISTS(HttpStatus.CONFLICT, "DF002", "이미 존재하는 데이터 포맷 정보입니다."),
+
+    // Camp
+    CMP_NOT_FOUND(HttpStatus.NOT_FOUND, "CMP001", "캠페인 정보를 찾을 수 없습니다."),
+    CMP_ALREADY_EXISTS(HttpStatus.CONFLICT, "CMP002", "이미 존재하는 캠페인입니다."),
+
+    // Camp
+    CMPNT_NOT_FOUND(HttpStatus.NOT_FOUND, "CMPNT001", "컴포넌트 정보를 찾을 수 없습니다."),
+    CMPNT_ALREADY_EXISTS(HttpStatus.CONFLICT, "CMPNT002", "이미 존재하는 컴포넌트입니다.");
 
     private final HttpStatus status;
     private final String code;

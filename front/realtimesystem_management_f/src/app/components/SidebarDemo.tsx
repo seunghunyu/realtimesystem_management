@@ -52,6 +52,7 @@ import { FilterConditionManagement } from "./FilterConditionManagement";
 import { DataFormatManagement } from "./DataFormatManagement";
 import { SystemVarManagement } from "./SystemVarManagement";
 import { UserManagement } from "./UserManagement";
+import { CampBuilder } from "./CampBuilder";
 
 
 // Softer spring animation curve
@@ -874,7 +875,7 @@ export function Frame760() {
         return <AnalyticsDashboard />;
       case "dashboard":
         if(activeSubSection === "campaign-management") {
-          return <CampManagement />;
+          return <CampManagement onNavigateToBuilder={() => setActiveSubSection("campaign-builder")}/>;
         } else if(activeSubSection === "campaign-approval-list") {
           return <CampApprovalList />;
         } else if(activeSubSection === "item-management") {
@@ -889,6 +890,8 @@ export function Frame760() {
           return <SystemVarManagement />;
         } else if(activeSubSection === "user-management") {
           return <UserManagement />;
+        } else if(activeSubSection === "campaign-builder") { //설계 화면
+          return <CampBuilder />;
         }else{
           return <CampManagement />;
         }

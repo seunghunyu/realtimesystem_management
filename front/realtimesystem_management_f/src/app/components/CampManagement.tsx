@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { userService } from "../services/userService";
+import { campService } from "../services/campService";
 import {
   Search,
   Filter,
@@ -38,69 +38,72 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Badge } from "./ui/badge";
-import { deptService, roleService } from "../services/codevalService";
+
+
 
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
-  userId: string;
-  userName: string;
-  stat: "active" | "inactive" | "pending";
-  roleCd: string;
-  roleNm: string;
-  deptCd: string;
-  deptNm: string;
-  createdAt: string;
-  lastActive: string;
-  address?: string;
+  campId: string;
+  campNm: string;
+  campDesc: string;
+  campBrch1: string;
+  campBrch2: string;
+  campType: string;
+  campStat: string;
 }
 
-interface DeptItem{
-  deptCd: string;
-  deptNm: string;
+// interface CampBrch{
+//   brchCd: string;
+//   brchNm: string;
+// }
+
+// interface CampBrch2{
+//   scndBrchCd: string;
+//   scndBrchNm: string;
+//   brchCd: string;
+// }
+
+interface CampBrch2{
+  scndBrchCd: string;
+  scndBrchNm: string;
+  useCd: string;
+}
+interface CampBrch1{
+  brchCd: string;
+  brchNm: string;
+  useCd: string;
+  scndBrchs: CampBrch2[];
 }
 
-interface RoleItem{
-  roleCd: string;
-  roleNm: string;
-}
 
 interface FormState {
-  user_id : string;
-  user_name: string;
-  password: string;
-  confirmPassword: string;
-  address: string;
-  role_cd: string;
-  role_nm: string;
-  dept_cd: string;
-  dept_nm: string;
+  campId: string;
+  campNm: string;
+  campDesc: string;
+  campBrch1: string;
+  campBrch2: string;
+  campType: string;
+  campStat: string;
 }
 
 interface FormErrors {
-  user_id?: string;
-  user_name?: string;
-  password?: string;
-  confirmPassword?: string;
-  address?: string;
-  role_cd?: string;
-  role_nm?: string;
-  dept_cd?: string; 
-  dept_nm?: string;
+  campId?: string;
+  campNm?: string;
+  campDesc?: string;
+  campBrch1?: string;
+  campBrch2?: string;
+  campType?: string;
+  campStat?: string;
+}
+
+interface CampManagementProps {
+  onNavigateToBuilder?: () => void; // Optional로 지정하여 안전 장치를 둡니다.
 }
 
 // ── initial data ───────────────────────────────────────────────
-// const INITIAL_DATA: DataItem[] = [
-//   { user_id: "kim.chulsoo@company.com", user_name: "김철수",  stat: "active", role_cd: "개발자", dept_nm: "엔지니어링", joinDate: "2024-01-15", lastActive: "2분 전" },
-//   { user_id: "lee.younghee@company.com", user_name: "이영희",  stat: "active", role_cd: "디자이너", dept_nm: "디자인", joinDate: "2024-02-20", lastActive: "5분 전" },
-//   { user_id: "park.jimin@company.com", user_name: "박지민",  stat: "pending", role_cd: "마케터", dept_nm: "마케팅", joinDate: "2024-03-10", lastActive: "1시간 전" },
-// ];
-
-// const ROLES = ["개발자", "디자이너", "마케터", "프로젝트 매니저", "데이터 분석가", "UX 디자이너", "제품 매니저", "기타"];
-// const DEPARTMENTS = ["엔지니어링", "디자인", "마케팅", "애널리틱스", "제품", "기타"];
-
 const EMPTY_FORM: FormState = {
-  user_name: "", user_id: "", password: "", confirmPassword: "",
-  address: "", role_cd: "", role_nm: "", dept_cd: "", dept_nm: "",
+  campId: "", campNm: "", campDesc: "", campBrch1: "",
+  campBrch2: "", campType: "", campStat: "",
 };
 
 // ── helpers ────────────────────────────────────────────────────
@@ -110,25 +113,9 @@ function today() {
 
 function validateForm(f: FormState): FormErrors {
   const e: FormErrors = {};
-  if (!f.user_name.trim()) e.user_name = "이름을 입력해주세요.";
-  if (!f.user_id.trim()) {
-    e.user_id = "이메일을 입력해주세요.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.user_id)) {
-    e.user_id = "올바른 이메일 형식이 아닙니다.";
-  }
-  if (!f.password) {
-    e.password = "비밀번호를 입력해주세요.";
-  } else if (f.password.length < 8) {
-    e.password = "비밀번호는 8자 이상이어야 합니다.";
-  }
-  if (!f.confirmPassword) {
-    e.confirmPassword = "비밀번호 확인을 입력해주세요.";
-  } else if (f.password !== f.confirmPassword) {
-    e.confirmPassword = "비밀번호가 일치하지 않습니다.";
-  }
-  if (!f.address.trim()) e.address = "주소를 입력해주세요.";
-  if (!f.role_cd) e.role_cd = "역할을 선택해주세요.";
-  if (!f.dept_nm) e.dept_nm = "부서를 선택해주세요.";
+  if (!f.campNm.trim()) e.campNm = "캠페인 명을 입력해주세요.";
+  if (!f.campBrch1.trim()) e.campBrch1 = "캠페인 분류를 선택해주세요.";
+  if (!f.campBrch2) e.campBrch2 = "캠페인 2차 분류를 선택해주세요.";
   return e;
 }
 
@@ -160,26 +147,52 @@ function Field({ label, required, error, children }: {
 function RegistrationModal({
   onClose,
   onSubmit,
-  departments,
-  roles,
+  campBrch1,
+  campBrch2,
+  onNavigateToBuilder
 }: {
   onClose: () => void;
   onSubmit: (item: DataItem) => void;
-  departments: DeptItem[];
-  roles: RoleItem[];
+  campBrch1: CampBrch1[];
+  campBrch2: CampBrch2[];
+  onNavigateToBuilder?: () => void;
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [filteredSubBranches, setFilteredSubBranches] = useState<CampBrch2[]>([]);
+
+
 
   const set = (key: keyof FormState, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
     if (apiError) setApiError(null);
   };
+  const handleMainBranchChange = (selectedBrchCd: string) => {
+    // 1) 대분류 선택값 폼 상태 저장 (React Form 라이브러리 설정 등)
+    //set("campBrch", selectedBrchCd); 
+    set("campBrch1", selectedBrchCd);
+    // 2) 소분류 선택값은 대분류가 바뀌었으므로 초기화
+    set("campBrch2", ""); 
+    
+    if (!selectedBrchCd) {
+      setFilteredSubBranches([]);
+      return;
+    }
 
+    // 3) API 호출 대신, 이미 들고 있는 데이터 Pool에서 해당 대분류 객체를 찾음
+    const selectedBranch = campBrch1.find(b => b.brchCd === selectedBrchCd);
+    
+    if (selectedBranch) {
+      // 찾은 대분류 내부의 subBranches 리스트를 소분류 State에 즉시 주입 (화면 자동 갱신)
+      setFilteredSubBranches(selectedBranch.scndBrchs || []);
+    } else {
+      setFilteredSubBranches([]);
+    }
+  };
   const handleSubmit = async () => {
     const errs = validateForm(form);
     if (Object.keys(errs).length > 0) {
@@ -191,13 +204,14 @@ function RegistrationModal({
     setApiError(null);
 
     // ── REST 요청: POST /api/users ──────────────────────────
-    const result = await userService.create({
-      userId: form.user_id.trim(),
-      userName: form.user_name.trim(),
-      password: form.password,
-      roleCd: form.role_cd,
-      deptNm: form.dept_nm,
-      address: form.address.trim(),
+    const result = await campService.create({
+      campId: form.campId,
+      campNm: form.campNm,
+      campDesc: form.campDesc,
+      campBrch1: form.campBrch1,
+      campBrch2: form.campBrch2,
+      campStat: form.campStat,
+      campType: form.campType,
     });
     // ───────────────────────────────────────────────────────
 
@@ -208,28 +222,22 @@ function RegistrationModal({
     const newItem: DataItem =
       result.ok && result.data
         ? {
-            userId: result.data.userId,
-            userName: result.data.userName,
-            stat: result.data.stat ?? "pending",
-            roleCd: result.data.roleCd,
-            roleNm: result.data.roleNm,
-            deptCd: result.data.deptCd,
-            deptNm: result.data.deptNm,
-            address: result.data.address,
-            createdAt: result.data.createdAt ?? today(),
-            lastActive: result.data.lastActive ?? "방금 전",
+            campId: result.data.campId,
+            campNm: result.data.campNm,
+            campDesc: result.data.campDesc,
+            campBrch1: result.data.campBrch1,
+            campBrch2: result.data.campBrch2,
+            campStat: result.data.campStat ?? "100",
+            campType: result.data.campType ?? "real",
           }
         : {
-            userId: form.user_id.trim(),
-            userName: form.user_name.trim(),
-            stat: "pending",
-            roleCd: form.role_cd,
-            roleNm: form.role_nm,
-            deptCd: form.dept_cd,
-            deptNm: form.dept_nm,
-            address: form.address.trim(),
-            createdAt: today(),
-            lastActive: "방금 전",
+            campId: form.campId,
+            campNm: form.campNm,
+            campDesc: "100",
+            campBrch1: form.campBrch1,
+            campBrch2: form.campBrch2,
+            campStat: form.campStat,
+            campType: form.campType,
           };
 
     if (!result.ok) {
@@ -242,10 +250,12 @@ function RegistrationModal({
     }
 
     setSubmitted(true);
-    setTimeout(() => {
-      onSubmit(newItem);
-      onClose();
-    }, 900);
+    onSubmit(newItem);
+    // 등록 후 화면이 안닫히도록 주석 
+    // setTimeout(() => {
+    //   onSubmit(newItem);
+    //   onClose();
+    // }, 900);
   };
 
   return (
@@ -263,8 +273,8 @@ function RegistrationModal({
         {/* header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800 shrink-0">
           <div>
-            <h2 className="text-neutral-50 text-lg font-semibold">회원가입 신청</h2>
-            <p className="text-neutral-500 text-xs mt-0.5">새로운 사용자를 등록합니다</p>
+            <h2 className="text-neutral-50 text-lg font-semibold">캠페인 등록</h2>
+            <p className="text-neutral-500 text-xs mt-0.5">캠페인을 등록합니다</p>
           </div>
           <button
             onClick={onClose}
@@ -275,120 +285,111 @@ function RegistrationModal({
         </div>
 
         {/* success overlay */}
-        {submitted && (
+        {/* {submitted && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-900/95 rounded-2xl gap-3">
             <CheckmarkFilled size={48} className="text-green-400" />
-            <p className="text-neutral-50 font-semibold text-lg">등록 완료!</p>
-            <p className="text-neutral-400 text-sm">사용자 목록에 추가되었습니다.</p>
+            <p className="text-neutral-50 font-semibold text-lg">캠페인 등록 완료!</p>
+            <p className="text-neutral-400 text-sm">캠페인 목록에 추가되었습니다.</p>
+          </div>
+        )} */}
+        {submitted && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-900/95 rounded-2xl gap-4 p-6">
+            {/* 1. 완료 상태 아이콘 및 문구 */}
+            <CheckmarkFilled size={48} className="text-green-400" />
+            <div className="text-center space-y-1">
+              <p className="text-neutral-50 font-semibold text-lg">캠페인 등록 완료!</p>
+              <p className="text-neutral-400 text-sm">캠페인 목록에 추가되었습니다.</p>
+            </div>
+
+            {/* 2. 추가된 질문 문구 */}
+            <p className="text-neutral-200 text-sm font-medium mt-2">
+              설계 화면으로 이동하시겠습니까?
+            </p>
+
+            {/* 3. "네 / 아니오" 버튼 영역 */}
+            <div className="flex items-center gap-3 w-full max-w-[240px] mt-2">
+              {/* '아니오' 버튼: 모달을 닫고 캠페인 목록에 그대로 머뭄 */}
+              <button
+                type="button"
+                onClick={onClose} // 💡 부모에게 모달을 닫으라고 요청 (목록 화면 그대로 유지)
+                className="flex-1 py-2 rounded-lg text-sm font-medium text-neutral-400 bg-neutral-800 hover:bg-neutral-750 active:bg-neutral-800 transition-colors border border-neutral-700"
+              >
+                아니오
+              </button>
+
+              {/* '네' 버튼: 설계 화면(CampBuilder)으로 즉시 이동 */}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose(); // 💡 먼저 모달 창을 닫아줍니다.
+                  onNavigateToBuilder?.(); //함수 존재할때만 뷰 전환
+                }}
+                className="flex-1 py-2 rounded-lg text-sm font-medium text-neutral-950 bg-green-400 hover:bg-green-300 active:bg-green-500 transition-colors font-semibold"
+              >
+                네
+              </button>
+            </div>
           </div>
         )}
-
         {/* form body */}
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4 relative" style={{ maxHeight: "60vh" }}>
+          {/* 대분류 Select */}
+        <Field label="캠페인 분류" required error={errors.campBrch1}>
+          <Select 
+            value={form.campBrch1} 
+            onValueChange={(v) => handleMainBranchChange(v)} // 💡 이 부분에서 커스텀 핸들러 함수 호출!
+          >
+            <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.campBrch1 ? "border-rose-500" : ""}`}>
+              <SelectValue placeholder="분류 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* 백엔드에서 통째로 긁어온 대분류 풀(Pool)을 그려줍니다. */}
+              {campBrch1.map(r => (
+                <SelectItem key={r.brchCd} value={r.brchCd}>{r.brchNm}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
 
-          <Field label="이름" required error={errors.user_name}>
+        {/* 소분류 Select */}
+        <Field label="캠페인 소분류" required error={errors.campBrch2}>
+          <Select 
+            value={form.campBrch2} 
+            onValueChange={(v) => set("campBrch2", v)} // 소분류 선택 값 설정
+            disabled={filteredSubBranches.length === 0} // 대분류를 고르기 전이거나 하위 소분류가 없으면 콤보박스 비활성화
+          >
+            <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.campBrch2 ? "border-rose-500" : ""}`}>
+              <SelectValue placeholder="소분류 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* 💡 기존의 전체 목록(campBrch2) 대신 필터링 완료된 데이터(filteredSubBranches)를 돌려줍니다! */}
+              {filteredSubBranches.map(d => (
+                <SelectItem key={d.scndBrchCd} value={d.scndBrchCd}>{d.scndBrchNm}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+          <Field label="캠페인 명" required error={errors.campNm}>
             <Input
-              value={form.user_name}
-              onChange={e => set("user_name", e.target.value)}
-              placeholder="홍길동"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_name ? "border-rose-500" : ""}`}
+              value={form.campNm}
+              onChange={e => set("campNm", e.target.value)}
+              placeholder="카드이용 고객 승인 감지 캠페인"
+              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.campNm ? "border-rose-500" : ""}`}
             />
           </Field>
 
-          <Field label="아이디" required error={errors.user_id}>
-            <Input
-              type="email"
-              value={form.user_id}
-              onChange={e => set("user_id", e.target.value)}
-              placeholder="example@company.com"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.user_id ? "border-rose-500" : ""}`}
+          <Field label="캠페인 설명" required error={errors.campDesc}>
+            <textarea
+              value={form.campDesc}
+              onChange={e => set("campDesc", e.target.value)}
+              placeholder="카드승인 고객 대상으로 승인금액 20만원 이상 고객에게 이벤트 관련 APP PUSH 발송"
+              className={`w-full h-32 p-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 font-mono placeholder:text-neutral-600 focus:border-blue-500 focus:outline-none resize-none ${errors.campDesc ? "border-rose-500" : ""}`}
             />
-          </Field>
-
-          <Field label="비밀번호" required error={errors.password}>
-            <Input
-              type="password"
-              value={form.password}
-              onChange={e => set("password", e.target.value)}
-              placeholder="8자 이상"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.password ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          <Field label="비밀번호 확인" required error={errors.confirmPassword}>
-            <Input
-              type="password"
-              value={form.confirmPassword}
-              onChange={e => set("confirmPassword", e.target.value)}
-              placeholder="비밀번호 재입력"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.confirmPassword ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          {/* password strength */}
-          {form.password && (
-            <div className="flex items-center gap-2 -mt-1">
-              {[1, 2, 3, 4].map(i => {
-                const strength = Math.min(
-                  4,
-                  (form.password.length >= 8 ? 1 : 0) +
-                  (/[A-Z]/.test(form.password) ? 1 : 0) +
-                  (/[0-9]/.test(form.password) ? 1 : 0) +
-                  (/[^A-Za-z0-9]/.test(form.password) ? 1 : 0)
-                );
-                const colors = ["bg-rose-500", "bg-amber-500", "bg-yellow-400", "bg-green-400"];
-                return (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= strength ? colors[strength - 1] : "bg-neutral-800"}`}
-                  />
-                );
-              })}
-              <span className="text-xs text-neutral-500 shrink-0">
-                {["", "취약", "보통", "강함", "매우 강함"][
-                  Math.min(4, (form.password.length >= 8 ? 1 : 0) +
-                  (/[A-Z]/.test(form.password) ? 1 : 0) +
-                  (/[0-9]/.test(form.password) ? 1 : 0) +
-                  (/[^A-Za-z0-9]/.test(form.password) ? 1 : 0))
-                ]}
-              </span>
-            </div>
-          )}
-
-          {/* address */}
-          <Field label="주소" required error={errors.address}>
-            <Input
-              value={form.address}
-              onChange={e => set("address", e.target.value)}
-              placeholder="서울특별시 강남구 테헤란로 123"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.address ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          <Field label="역할" required error={errors.role_cd}>
-            <Select value={form.role_cd} onValueChange={v => set("role_cd", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.role_cd ? "border-rose-500" : ""}`}>
-                <SelectValue placeholder="역할 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map(r => <SelectItem key={r.roleCd} value={r.roleNm}>{r.roleNm}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <Field label="부서" required error={errors.dept_nm}>
-            <Select value={form.dept_nm} onValueChange={v => set("dept_nm", v)}>
-              <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.dept_nm ? "border-rose-500" : ""}`}>
-                <SelectValue placeholder="부서 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
-              </SelectContent>
-            </Select>
           </Field>
 
           <p className="text-neutral-600 text-xs pt-1">
-            <span className="text-rose-400">*</span> 필수 입력 항목 / 가입 후 상태는 <span className="text-yellow-500">대기중</span>으로 설정됩니다.
+            <span className="text-rose-400">*</span> 필수 입력 항목 / 등록 후 상태는 <span className="text-yellow-500">설계중</span>으로 설정됩니다.
           </p>
 
           {apiError && (
@@ -423,7 +424,7 @@ function RegistrationModal({
             ) : (
               <>
                 <AddLarge size={14} />
-                회원가입 신청
+                캠페인 등록
               </>
             )}
           </button>
@@ -437,29 +438,27 @@ function RegistrationModal({
 type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
-export function CampManagement() {
-  const [users, setUsers] = useState<DataItem[]>([]);
-  const [departments, setDepartments] = useState<DeptItem[]>([]);
-  const [roles, setRoles] = useState<RoleItem[]>([]);
+export function CampManagement({ onNavigateToBuilder }: CampManagementProps) {
+  const [camp, setCamp] = useState<DataItem[]>([]);
+  const [campBrch1, setCampBrch] = useState<CampBrch1[]>([]);
+  const [campBrch2, setCampBrch2] = useState<CampBrch2[]>([]);
 
   const [showModal, setShowModal] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>("userName");
+  const [sortField, setSortField] = useState<SortField>("campNm");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const filteredAndSortedData = useMemo(() => {
-    const filtered = users.filter(item => {
+    const filtered = camp.filter(item => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = item.userName.toLowerCase().includes(q) ||
-        item.userId.toLowerCase().includes(q) ||
-        item.roleCd.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "all" || item.stat === statusFilter;
-      const matchesDept = departmentFilter === "all" || item.deptNm === departmentFilter;
-      return matchesSearch && matchesStatus && matchesDept;
+      const matchesSearch = item.campNm.toLowerCase().includes(q) ||
+        item.campId.toLowerCase().includes(q) || item.campDesc.toLowerCase().includes(q);;
+      const matchesStatus = statusFilter === "all" || item.campStat === statusFilter;
+      return matchesSearch && matchesStatus;
     });
 
     filtered.sort((a, b) => {
@@ -470,7 +469,7 @@ export function CampManagement() {
       return 0;
     });
     return filtered;
-  }, [users, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
+  }, [camp, searchQuery, statusFilter, departmentFilter, sortField, sortDirection]);
 
   // const departments = Array.from(new Set(users.map(u => u.dept_nm)));
   // const roles = Array.from(new Set(users.map(u => u.role_cd)));
@@ -482,7 +481,7 @@ export function CampManagement() {
 
   const toggleSelectAll = () => {
     if (selectedItems.size === filteredAndSortedData.length) setSelectedItems(new Set());
-    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.userId)));
+    else setSelectedItems(new Set(filteredAndSortedData.map(i => i.campId)));
   };
 
   const toggleSelectItem = (id: string) => {
@@ -496,64 +495,77 @@ export function CampManagement() {
   const deleteSelected = async () => {
     const ids = Array.from(selectedItems);
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => !selectedItems.has(u.userId)));
+    setCamp(prev => prev.filter(u => !selectedItems.has(u.campId)));
     setSelectedItems(new Set());
     // REST 요청: DELETE /api/users/:id (병렬)
-    await userService.removeMany(ids);
+    await campService.removeMany(ids);
   };
 
-  const deleteUser = async (id: string) => {
+  const deleteCamp = async (id: string) => {
     // 낙관적 업데이트 먼저
-    setUsers(prev => prev.filter(u => u.userId !== id));
+    setCamp(prev => prev.filter(u => u.campId !== id));
     setSelectedItems(prev => { const n = new Set(prev); n.delete(id); return n; });
     // REST 요청: DELETE /api/users/:id
-    await userService.remove(id);
+    await campService.remove(id);
   };
 
-  const addUser = (item: DataItem) => {
-    setUsers(prev => [item, ...prev]);
+  const addCamp = (item: DataItem) => {
+    setCamp(prev => [item, ...prev]);
   };
 
-  const getUsers = async () => {
-    await userService.list().then(res => {
+  const getCamp = async () => {
+    await campService.list().then(res => {
       if (res.ok && res.data) {
-        console.log("Users:", res.data);
-        setUsers(res.data);
+        console.log("Camp:", res.data);
+        setCamp(res.data);
       } else {
         console.error("Failed to fetch users:");
       }
     });
   };
 
-  const getRoles = async () => {
-    await roleService.list().then(res => {
+  const getCampBrch = async () => {
+    await campService.brchList().then(res => {
       if (res.ok && res.data) {
-        console.log("Roles:", res.data);
-        setRoles(res.data);
+        console.log("CampBrch:", res.data);
+        setCampBrch(res.data);
       } else {
         console.error("Failed to fetch roles:");
       }
     });
   };
 
-  const getDepts = async () => {
-    await deptService.list().then(res => {
-      if (res.ok && res.data) {
-        console.log("Departments:", res.data);
-        setDepartments(res.data);
-      } else {
-        console.error("Failed to fetch departments:");
-      }
-    });
-  };
-
-
-  const getStatusBadge = (stat: string) => {
-    switch (stat) {
-      case "active":  return <Badge className="bg-green-600 hover:bg-green-700 text-xs">활성</Badge>;
-      case "inactive":return <Badge className="bg-neutral-600 hover:bg-neutral-700 text-xs">비활성</Badge>;
-      case "pending": return <Badge className="bg-yellow-600 hover:bg-yellow-700 text-xs">대기중</Badge>;
-      default:        return <Badge className="text-xs">{stat}</Badge>;
+  // const getCampBrch2 = async () => {
+  //   await campService.brch2List().then(res => {
+  //     if (res.ok && res.data) {
+  //       console.log("CampBrch2:", res.data);
+  //       setCampBrch2(res.data);
+  //     } else {
+  //       console.error("Failed to fetch departments:");
+  //     }
+  //   });
+  // };
+  
+  
+// 100 설계 중
+// 200 설계 완료
+// 250 승인 요청
+// 260 반려
+// 300 테스트 수행 중
+// 310 수행 중
+// 400 수행 완료 
+// 500 중지
+  const getStatusBadge = (campStat: string) => {
+    switch (campStat) {
+      case "100":  return <Badge className="bg-green-600 hover:bg-green-700 text-xs">설계 중</Badge>;
+      case "200":return <Badge className="bg-neutral-600 hover:bg-neutral-700 text-xs">설계 완료</Badge>;
+      case "250":return <Badge className="bg-neutral-600 hover:bg-neutral-700 text-xs">승인 요청</Badge>;
+      case "260":return <Badge className="bg-neutral-600 hover:bg-neutral-700 text-xs">반려</Badge>;
+      case "300": return <Badge className="bg-yellow-600 hover:bg-yellow-700 text-xs">테스트 수행 중</Badge>;
+      case "310": return <Badge className="bg-yellow-600 hover:bg-yellow-700 text-xs">수행 중</Badge>;
+      case "400": return <Badge className="bg-yellow-600 hover:bg-yellow-700 text-xs">수행 완료</Badge>;
+      case "500": return <Badge className="bg-yellow-600 hover:bg-yellow-700 text-xs">중지</Badge>;
+      default:        return <Badge className="text-xs">{campStat}</Badge>;
     }
   };
 
@@ -563,9 +575,9 @@ export function CampManagement() {
       : null;
 
   useEffect( () => {
-    getRoles(); //역할 정보
-    getDepts(); //부서 정보
-    getUsers(); //사용자 정보
+    getCampBrch(); //캠페인 분류 정보
+    // getCampBrch2(); //캠페인 2차 분류 정보
+    getCamp(); //캠페인 정보
   }, []); // []로 두면 컴포넌트가 처음 켜질 때 한번만 실행
 
 
@@ -575,9 +587,10 @@ export function CampManagement() {
       {showModal && (
         <RegistrationModal
           onClose={() => setShowModal(false)}
-          onSubmit={addUser}
-          departments={departments} 
-          roles={roles}
+          onSubmit={addCamp}
+          campBrch1={campBrch1} 
+          campBrch2={campBrch2}
+          onNavigateToBuilder={onNavigateToBuilder}
         />
       )}
 
@@ -597,7 +610,7 @@ export function CampManagement() {
               <div className="flex-1 max-w-md relative">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
                 <Input
-                  placeholder="이름, 이메일, 역할로 검색..."
+                  placeholder="캠페인 명, 캠페인 설명으로 검색..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="pl-9 bg-neutral-950 border-neutral-800 text-neutral-50 placeholder:text-neutral-600 h-9"
@@ -614,20 +627,25 @@ export function CampManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">모든 상태</SelectItem>
-                      <SelectItem value="active">활성</SelectItem>
-                      <SelectItem value="inactive">비활성</SelectItem>
-                      <SelectItem value="pending">대기중</SelectItem>
+                      <SelectItem value="100">설계 중</SelectItem>
+                      <SelectItem value="200">설계 완료</SelectItem>
+                      <SelectItem value="250">승인 요청</SelectItem>
+                      <SelectItem value="260">반려</SelectItem>
+                      <SelectItem value="300">테스트 수행 중</SelectItem>
+                      <SelectItem value="310">수행 중</SelectItem>
+                      <SelectItem value="400">수행 완료</SelectItem>
+                      <SelectItem value="500">중지</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                   <SelectTrigger className="h-9 w-[150px] bg-neutral-950 border-neutral-800 text-neutral-50 text-sm">
-                    <SelectValue placeholder="부서" />
+                    <SelectValue placeholder="캠페인 분류" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">모든 부서</SelectItem>
-                    {departments.map(d => <SelectItem key={d.deptCd} value={d.deptNm}>{d.deptNm}</SelectItem>)}
+                    <SelectItem value="all">모든 분류</SelectItem>
+                    {campBrch1.map(d => <SelectItem key={d.brchCd} value={d.brchNm}>{d.brchNm}</SelectItem>)}
                   </SelectContent>
                 </Select>
 
@@ -636,24 +654,8 @@ export function CampManagement() {
                   className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-2 transition-colors"
                 >
                   <AddLarge size={15} />
-                  새로운 항목
+                  캠페인 등록
                 </button>
-
-                {/* <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="h-9 px-3 rounded-lg border border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-neutral-50 hover:bg-neutral-900 transition-colors flex items-center">
-                      <OverflowMenuHorizontal size={16} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>
-                      <Download size={14} className="mr-2" />내보내기
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setUsers(INITIAL_DATA)}>
-                      <Renew size={14} className="mr-2" />초기화
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu> */}
               </div>
             </div>
 
@@ -697,8 +699,8 @@ export function CampManagement() {
                     />
                   </TableHead>
                   {([
-                    { field: "name" as SortField, label: "이름" },
-                    { field: "email" as SortField, label: "이메일" },
+                    { field: "campNm" as SortField, label: "캠페인 명" },
+                    { field: "campDesc" as SortField, label: "캠페인 설명" },
                   ]).map(col => (
                     <TableHead
                       key={col.field}
@@ -714,41 +716,39 @@ export function CampManagement() {
                   <TableHead className="text-neutral-400">상태</TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("roleCd")}
+                    onClick={() => handleSort("campBrch1")}
                   >
-                    <div className="flex items-center gap-1">역할<SortIcon field="roleCd" /></div>
+                    <div className="flex items-center gap-1">분류<SortIcon field="campBrch1" /></div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer select-none text-neutral-400 hover:text-neutral-200 transition-colors"
-                    onClick={() => handleSort("deptNm")}
+                    onClick={() => handleSort("campBrch2")}
                   >
-                    <div className="flex items-center gap-1">부서<SortIcon field="deptNm" /></div>
+                    <div className="flex items-center gap-1">소분류<SortIcon field="campBrch2" /></div>
                   </TableHead>
-                  <TableHead className="text-neutral-400">가입일</TableHead>
-                  {/* <TableHead className="text-neutral-400">최근 활동</TableHead> */}
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAndSortedData.map(item => (
                   <TableRow
-                    key={item.userId}
+                    key={item.campId}
                     className="border-neutral-800 hover:bg-neutral-800/40 transition-colors"
                   >
                     <TableCell>
                       <input
                         type="checkbox"
-                        checked={selectedItems.has(item.userId)}
-                        onChange={() => toggleSelectItem(item.userId)}
+                        checked={selectedItems.has(item.campId)}
+                        onChange={() => toggleSelectItem(item.campId)}
                         className="w-4 h-4 rounded border-neutral-600 bg-neutral-950 accent-blue-500"
                       />
                     </TableCell>
-                    <TableCell className="text-neutral-50 font-medium">{item.userName}</TableCell>
-                    <TableCell className="text-neutral-400 text-sm">{item.userId}</TableCell>
-                    <TableCell>{getStatusBadge(item.stat)}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.roleCd}</TableCell>
-                    <TableCell className="text-neutral-300 text-sm">{item.deptNm}</TableCell>
-                    <TableCell className="text-neutral-500 text-sm">{item.createdAt}</TableCell>
+                    <TableCell className="text-neutral-50 font-medium">{item.campNm}</TableCell>
+                    <TableCell className="text-neutral-400 text-sm">{item.campId}</TableCell>
+                    <TableCell>{getStatusBadge(item.campStat)}</TableCell>
+                    <TableCell className="text-neutral-300 text-sm">{item.campBrch1}</TableCell>
+                    <TableCell className="text-neutral-300 text-sm">{item.campBrch2}</TableCell>
+                    {/* <TableCell className="text-neutral-500 text-sm">{item.createdAt}</TableCell> */}
                     {/* <TableCell className="text-neutral-500 text-sm">{item.lastActive}</TableCell> */}
                     <TableCell>
                       <DropdownMenu>
@@ -763,7 +763,7 @@ export function CampManagement() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-rose-400 focus:text-rose-400"
-                            onClick={() => deleteUser(item.userId)}
+                            onClick={() => deleteCamp(item.campId)}
                           >
                             <TrashCan size={13} className="mr-2" />삭제
                           </DropdownMenuItem>

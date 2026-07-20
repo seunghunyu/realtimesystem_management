@@ -9,6 +9,7 @@ import {
   TrashCan,
   ChevronDown,
   ChevronUp,
+  FlowData,
   Download,
   Renew,
   Close,
@@ -667,7 +668,14 @@ export function CampManagement({ onNavigateToBuilder }: CampManagementProps) {
                 </span>
                 <div className="flex gap-2">
                   <button className="h-8 px-3 rounded-lg border border-neutral-700 bg-neutral-950 text-neutral-300 hover:bg-neutral-800 text-sm flex items-center gap-1.5 transition-colors">
-                    <Edit size={13} />편집
+                    <Edit size={13} />기획 정보 편집
+                  </button>
+                  <button className="h-8 px-3 rounded-lg border border-neutral-700 bg-neutral-950 text-neutral-300 hover:bg-neutral-800 text-sm flex items-center gap-1.5 transition-colors"
+                    onClick={() => {
+                      onNavigateToBuilder?.(); //함수 존재할때만 뷰 전환
+                    }}
+                  >
+                    <FlowData size={13} />설계 정보 보기
                   </button>
                   <button
                     onClick={deleteSelected}
@@ -682,7 +690,7 @@ export function CampManagement({ onNavigateToBuilder }: CampManagementProps) {
 
           {/* count */}
           <p className="text-neutral-500 text-sm mb-3">
-            총 <span className="text-neutral-300 font-medium">{filteredAndSortedData.length}</span>명
+            총 <span className="text-neutral-300 font-medium">{filteredAndSortedData.length}</span>개
           </p>
 
           {/* table */}
@@ -692,7 +700,7 @@ export function CampManagement({ onNavigateToBuilder }: CampManagementProps) {
                 <TableRow className="border-neutral-800 hover:bg-transparent">
                   <TableHead className="w-10">
                     <input
-                      type="checkbox"
+                      type="radiobox"
                       checked={selectedItems.size === filteredAndSortedData.length && filteredAndSortedData.length > 0}
                       onChange={toggleSelectAll}
                       className="w-4 h-4 rounded border-neutral-600 bg-neutral-950 accent-blue-500"
@@ -737,14 +745,14 @@ export function CampManagement({ onNavigateToBuilder }: CampManagementProps) {
                   >
                     <TableCell>
                       <input
-                        type="checkbox"
+                        type="radio"
                         checked={selectedItems.has(item.campId)}
                         onChange={() => toggleSelectItem(item.campId)}
                         className="w-4 h-4 rounded border-neutral-600 bg-neutral-950 accent-blue-500"
                       />
                     </TableCell>
                     <TableCell className="text-neutral-50 font-medium">{item.campNm}</TableCell>
-                    <TableCell className="text-neutral-400 text-sm">{item.campId}</TableCell>
+                    <TableCell className="text-neutral-400 text-sm">{item.campDesc}</TableCell>
                     <TableCell>{getStatusBadge(item.campStat)}</TableCell>
                     <TableCell className="text-neutral-300 text-sm">{item.campBrch1}</TableCell>
                     <TableCell className="text-neutral-300 text-sm">{item.campBrch2}</TableCell>

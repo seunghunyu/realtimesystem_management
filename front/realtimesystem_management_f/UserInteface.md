@@ -51,7 +51,13 @@
 <img width="805" height="595" alt="image" src="https://github.com/user-attachments/assets/3345ebc8-5c21-4b62-ac4d-2cca1298e0eb" />
 <br>
 <br>
- 
+<h2>7.캠페인 설계 화면</h2>
+<h3>캠페인에서 사용되는 설계 flow를 그리는 화면 (ReactFlow 사용)</h3>
+<br>
+<img width="1153" height="838" alt="image" src="https://github.com/user-attachments/assets/5705c243-16fe-4508-80bc-66ac7b247dda" />
+<br>
+<br>
+
 
   
 

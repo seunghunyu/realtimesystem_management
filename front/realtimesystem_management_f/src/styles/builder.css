@@ -1,0 +1,40 @@
+@import url('@xyflow/react/dist/style.css');
+/* we put the theme css at the end to override some of the default css variables and styles */
+@import url('./xy-theme.css');
+ 
+html,
+body {
+  margin: 0;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+ 
+#app {
+  width: 100vw;
+  height: 100vh;
+}
+ 
+.react-flow__node-custom .react-flow__handle.connectable {
+  border-color: var(--xy-theme-selected);
+  background: var(--xy-theme-selected);
+ 
+  &:hover {
+    background: var(--xy-theme-selected);
+  }
+}
+
+
+/* 💡 핑크색 선택 포커스 박스 및 기본 그림자만 선택적으로 제거 */
+.react-flow__node:focus,
+.react-flow__node:focus-visible,
+.react-flow__node.selected {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 💡 커스텀 노드 래퍼의 불필요한 배경/패딩만 제거 */
+.react-flow__node-custom {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}

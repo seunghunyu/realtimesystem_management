@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 시스템 변수 관련된 모든 API
+ */
 @RestController
 @RequestMapping("/api/sysvars")
 @RequiredArgsConstructor

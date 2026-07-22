@@ -15,7 +15,7 @@ public class CampFilterCondition {
     @MapsId("cmpntId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cmpnt_id")
-    private Component component;
+    private Cmpnt cmpnt;
 
     @MapsId("campId")
     @ManyToOne(fetch = FetchType.LAZY)

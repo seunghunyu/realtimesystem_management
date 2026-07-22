@@ -3,8 +3,6 @@ package com.realtime.management.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "component")
 @Getter
@@ -12,7 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Component {
+public class Cmpnt {
     @Id
     @Column(name = "cmpnt_id")
     private String cmpntId;
@@ -22,6 +20,9 @@ public class Component {
 
     @Column(name = "cmpnt_desc")
     private String cmpntDesc;
+
+    @Column(name = "cmpnt_type")
+    private String cmpntType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "camp_id")

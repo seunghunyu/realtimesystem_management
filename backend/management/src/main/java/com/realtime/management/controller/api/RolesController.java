@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 역할 관련된 모든 API
+ */
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor

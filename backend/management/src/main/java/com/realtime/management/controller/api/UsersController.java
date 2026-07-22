@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 사용자 관련된 모든 API
+ */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

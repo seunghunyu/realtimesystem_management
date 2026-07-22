@@ -1,11 +1,8 @@
 package com.realtime.management.dto.camp;
 
-import com.realtime.management.entity.Component;
-import com.realtime.management.entity.Users;
+import com.realtime.management.entity.Cmpnt;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Builder
@@ -20,12 +17,30 @@ public class ComponentResponse {
 
     private String fromCmpntId;
 
-    public static ComponentResponse from(Component component){
+    private SchedulerData schedulerData;
+    private FilteringData filteringData;
+    private DataFormatData dataFormatData;
+    private CleansingData cleansingData;
+    private MessageData messageData;
+    private PushData pushData;
+
+    public static ComponentResponse from(Cmpnt cmpnt){
         return ComponentResponse.builder()
-                .cmpntId(component.getCmpntId())
-                .cmpntNm(component.getCmpntNm())
-                .cmpntDesc(component.getCmpntDesc())
-                .campId((component.getCamp() != null) ? component.getCamp().getCampId() : "")
+                .cmpntId(cmpnt.getCmpntId())
+                .cmpntNm(cmpnt.getCmpntNm())
+                .cmpntDesc(cmpnt.getCmpntDesc())
+                .campId((cmpnt.getCamp() != null) ? cmpnt.getCamp().getCampId() : "")
+                .build();
+    }
+    // 💡 [추가] 스케줄러 전용 response 생성 메서드 (오버로딩)
+    public static ComponentResponse from(Cmpnt cmpnt, SchedulerData schedulerData) {
+        return ComponentResponse.builder()
+                .cmpntId(cmpnt.getCmpntId())
+                .cmpntNm(cmpnt.getCmpntNm())
+                .cmpntDesc(cmpnt.getCmpntDesc())
+                .campId((cmpnt.getCamp() != null) ? cmpnt.getCamp().getCampId() : "")
+                .fromCmpntId(cmpnt.getFromCmpntId())
+                .schedulerData(schedulerData)
                 .build();
     }
 }

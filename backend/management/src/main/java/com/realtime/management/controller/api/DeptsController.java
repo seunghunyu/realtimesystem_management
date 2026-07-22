@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 부서 관련된 모든 API
+ */
 @RestController
 @RequestMapping("/api/depts")
 @RequiredArgsConstructor

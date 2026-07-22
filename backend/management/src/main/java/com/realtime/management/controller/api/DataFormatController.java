@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 데이터 포맷 설계에 관련된 모든 API
+ */
 @RestController
 @RequestMapping("/api/dformat")
 @RequiredArgsConstructor

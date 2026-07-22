@@ -127,6 +127,7 @@ create table component(
 	cmpnt_nm varchar(128),
 	cmpnt_desc varchar(256),
 	camp_id varchar(48) not null,
+	cmpnt_type varchar(24),
 	from_cmpnt_id varchar(48) not null,
 	CONSTRAINT pk_component PRIMARY KEY (cmpnt_id, camp_id)
 );
@@ -162,4 +163,24 @@ create table camp_scnd_brch(
 	brch_cd varchar(128) not null,
 	use_cd varchar(1) not null,
 	CONSTRAINT pk_camp_scnd_brch PRIMARY KEY (scnd_brch_cd, brch_cd)
+);
+
+-- 18. 스케줄 정보
+create table camp_sch_info(
+	sch_id varchar(12) not null,
+	sch_nm varchar(48) not null,
+	camp_id varchar(48) not null,
+	obj_kind varchar(12) not null default 'realtime',
+	str_dt varchar(12) not null,
+	end_dt varchar(12) not null,
+	str_tm varchar(12),
+	end_tm varchar(12),
+	CONSTRAINT pk_camp_sch_info PRIMARY KEY (sch_id, camp_id)
+);
+
+-- 19. 스케줄 시간 정보
+create table camp_sch_time(
+	sch_id varchar(12) not null,
+	sch_time varchar(12) not null,
+	CONSTRAINT pk_camp_sch_info PRIMARY KEY (sch_id, sch_time)
 );

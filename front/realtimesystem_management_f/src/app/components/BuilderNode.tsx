@@ -14,7 +14,8 @@ import BuilderHandle from './BuilderHandle';
  
 const NODE_CONFIG: Record<string, { icon: any; color: string }> = {
   'START': { icon: PlayFilled, color: 'text-emerald-500' },
-  '스케줄러': { icon: Time, color: 'text-amber-500' },
+  '실시간 스케줄러': { icon: Time, color: 'text-amber-500' },
+  '배치 스케줄러': { icon: Time, color: 'text-amber-500' },
   '필터 조건 설정': { icon: Split, color: 'text-purple-500' },
   '메시지 발송': { icon: Email, color: 'text-blue-500' },
   '데이터 포맷팅': { icon: Code, color: 'text-emerald-500' },

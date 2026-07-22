@@ -63,7 +63,11 @@ import { Badge } from "./ui/badge";
 import { deptService, roleService } from "../services/codevalService";
 import { SchedulerRealTime } from "./cmpnt/SchedulerRealTime";
 import { SchedulerBatch } from "./cmpnt/SchedulerBatch";
-
+import { DataFormat } from "./cmpnt/DataFormat";
+import { Filtering } from "./cmpnt/Filter";
+import { Push } from "./cmpnt/Push";
+import { SMS } from "./cmpnt/SMS";
+import { Cleansing } from "./cmpnt/Cleansing";
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
   campId: string;
@@ -414,19 +418,7 @@ type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
 export function CampBuilder() {
-  // const [camp, setCamp] = useState<DataItem[]>([]);
-  const [campBrch1, setCampBrch] = useState<CampBrch1[]>([]);
-  const [campBrch2, setCampBrch2] = useState<CampBrch2[]>([]);
-
-  const [showModal, setShowModal] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>("campNm");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-
+  
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([
       {
         id: '1',
@@ -458,7 +450,7 @@ export function CampBuilder() {
   } | null>(null);
 
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]); // 👈 'edges'가 여기서 선언되어야 합니다!
-  
+  const [componentType, setComponentType] = useState<'batch' | 'realtime' | 'filtering' | 'dataformat' | 'cleansing' | 'push' | 'sms' | null>(null);
   const [showSchedulerModal, setShowSchedulerModal] = useState(false); // 모달 표시 여부
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 알림 메시지
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -530,7 +522,7 @@ export function CampBuilder() {
   };
 
   // 💡 4. 모달 저장 버튼 클릭 시 호출되는 함수
-  const handleSchedulerSave = (data: any) => {
+  const handleComponentSave = (data: any) => {
     if (!selectedNodeId) return;
 
     console.log('스케줄러 저장 데이터:', data);
@@ -566,13 +558,17 @@ export function CampBuilder() {
   }; 
 
   const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: Node) => {
-  // 생성된 노드의 label(이름)이 "스케줄러"인 경우에만 모달 열기
-  if (node.data.label === "스케줄러") {
-    // 필요하다면 클릭한 노드의 ID를 상태로 저장해둘 수도 있습니다.
-    setSelectedNodeId(node.id);
-    setShowSchedulerModal(true);
-  }
-}, []);
+    // 생성된 노드의 label(이름)이 "스케줄러"인 경우에만 모달 열기
+    if (node.data.label === "배치 스케줄러") {
+      // 필요하다면 클릭한 노드의 ID를 상태로 저장해둘 수도 있습니다.
+      setSelectedNodeId(node.id);
+      setComponentType('batch'); 
+    }else if(node.data.label === "실시간 스케줄러") {
+      // 필요하다면 클릭한 노드의 ID를 상태로 저장해둘 수도 있습니다.
+      setSelectedNodeId(node.id);
+      setComponentType('realtime'); 
+    }
+  }, []);
 
   return (
     <>
@@ -594,7 +590,8 @@ export function CampBuilder() {
               <div className="flex gap-2 items-center flex-wrap">
                 
                 <button
-                  onClick={() => setShowModal(true)}
+                  // onClick={() => setShowModal(true)}
+                  // onClick={() => }
                   className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-2 transition-colors"
                 >
                   <AddLarge size={15} />
@@ -623,7 +620,7 @@ export function CampBuilder() {
               defaultViewport={{ x: 20, y: 100, zoom: 1 }}
               colorMode="system"
             >
-              <Background gap={16} size={1}/>
+              <Background gap={16} size={1} bgColor="#0a0a0a"/>
             </ReactFlow>    
             {/* 💡 4. 마우스 우클릭 커스텀 팝업 메뉴 */}
             {menu && (
@@ -636,11 +633,18 @@ export function CampBuilder() {
                   <span>후행 노드 추가</span>
                 </div>
                 <button
-                  onClick={() => addNextNode('스케줄러')}
+                  onClick={() => addNextNode('실시간 스케줄러')}
                   className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 transition-colors"
                 >
                   <Time size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">스케줄러</span>
+                  <span className="font-medium">실시간 스케줄러</span>
+                </button>
+                <button
+                  onClick={() => addNextNode('배치 스케줄러')}
+                  className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 transition-colors"
+                >
+                  <Time size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
+                  <span className="font-medium">배치 스케줄러</span>
                 </button>
                 <button
                   onClick={() => addNextNode('데이터 포맷팅')}
@@ -674,10 +678,46 @@ export function CampBuilder() {
               </div>
             )}
             {/* 모달 및 토스트 표시 부분 동일 */}
-            {showSchedulerModal && (
+            {componentType === 'batch' && (
+              <SchedulerBatch 
+                onClose={() => setComponentType(null)} 
+                onSave={handleComponentSave} 
+              />
+            )}
+            {componentType === 'realtime' && (
               <SchedulerRealTime 
-                onClose={() => setShowSchedulerModal(false)} 
-                onSave={handleSchedulerSave} 
+                onClose={() => setComponentType(null)} 
+                onSave={handleComponentSave} 
+              />
+            )}
+            {componentType === 'dataformat' && (
+              <DataFormat 
+                onClose={() => setComponentType(null)} 
+                onSave={handleComponentSave} 
+              />
+            )}
+            {componentType === 'cleansing' && (
+              <Cleansing 
+                onClose={() => setComponentType(null)} 
+                onSave={handleComponentSave} 
+              />
+            )}
+            {componentType === 'filtering' && (
+              <Filtering 
+                onClose={() => setComponentType(null)} 
+                onSave={handleComponentSave} 
+              />
+            )}
+            {componentType === 'sms' && (
+              <SMS 
+                onClose={() => setComponentType(null)} 
+                onSave={handleComponentSave} 
+              />
+            )}
+            {componentType === 'push' && (
+              <Push 
+                onClose={() => setComponentType(null)} 
+                onSave={handleComponentSave} 
               />
             )}
           </div>

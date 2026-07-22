@@ -57,8 +57,18 @@
 <img width="1153" height="838" alt="image" src="https://github.com/user-attachments/assets/5705c243-16fe-4508-80bc-66ac7b247dda" />
 <br>
 <br>
-
-
+<h2>8.실시간 스케줄러 컴포넌트 화면</h2>
+<h3>실시간 캠페인용 스케줄러 정보 설정 화면, 시작시간, 종료시간까지 스케줄러가 계속 동작하면서 데이터 감지</h3>
+<br>
+<img width="428" height="558" alt="image" src="https://github.com/user-attachments/assets/85b96c82-17bb-4a0c-a379-ca7590d7271e" />
+<br>
+<br>
+<h2>9.배치 스케줄러 컴포넌트 화면</h2>
+<h3>배치 캠페인용 스케줄러 정보 설정 화면, 실시간 스케줄러와 다르게 배치가 도는 시간들을 등록 할 수 있게 설정</h3>
+<br>
+<img width="473" height="538" alt="image" src="https://github.com/user-attachments/assets/f50f19e3-96ab-4c60-b4a5-3d92161a8366" />
+<br>
+<br>
   
 
  

@@ -17,7 +17,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class FilteringStrategy implements ComponentStrategy{
+public class ChannelStrategy implements ComponentStrategy{
     private final CampRepository campRepository;
     private final ComponentRepository componentRepository;
     private final CampSchInfoRepository campSchInfoRepository;
@@ -25,7 +25,7 @@ public class FilteringStrategy implements ComponentStrategy{
 
     @Override
     public String getObjKind() {
-        return "filtering";
+        return "channel";
     }
 
     @Override

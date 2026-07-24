@@ -5,7 +5,8 @@ import {
   Time,        // ⏱️ 대기 시간
   Add,          // ➕ 노드 추가
   Code,           // 💡 데이터 변환
-  Clean           // 💡 데이터 정제
+  Clean,           // 💡 데이터 정제
+  Play
 } from "@carbon/icons-react";
 import {
   Background,
@@ -64,7 +65,7 @@ import { deptService, roleService } from "../services/codevalService";
 import { SchedulerRealTime } from "./cmpnt/SchedulerRealTime";
 import { SchedulerBatch } from "./cmpnt/SchedulerBatch";
 import { DataFormat } from "./cmpnt/DataFormat";
-import { Filtering } from "./cmpnt/Filter";
+import { Filtering } from "./cmpnt/Filtering";
 import { Push } from "./cmpnt/Push";
 import { SMS } from "./cmpnt/SMS";
 import { Cleansing } from "./cmpnt/Cleansing";
@@ -78,30 +79,6 @@ interface DataItem {
   campType: string;
   campStat: string;
 }
-
-// interface CampBrch{
-//   brchCd: string;
-//   brchNm: string;
-// }
-
-// interface CampBrch2{
-//   scndBrchCd: string;
-//   scndBrchNm: string;
-//   brchCd: string;
-// }
-
-interface CampBrch2{
-  scndBrchCd: string;
-  scndBrchNm: string;
-  useCd: string;
-}
-interface CampBrch1{
-  brchCd: string;
-  brchNm: string;
-  useCd: string;
-  scndBrchs: CampBrch2[];
-}
-
 
 interface FormState {
   campId: string;
@@ -166,252 +143,6 @@ function Field({ label, required, error, children }: {
   );
 }
 
-// ── Registration Modal ─────────────────────────────────────────
-function RegistrationModal({
-  onClose,
-  onSubmit,
-  campBrch1,
-  campBrch2
-}: {
-  onClose: () => void;
-  onSubmit: (item: DataItem) => void;
-  campBrch1: CampBrch1[];
-  campBrch2: CampBrch2[];
-}) {
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [filteredSubBranches, setFilteredSubBranches] = useState<CampBrch2[]>([]);
-
-  const set = (key: keyof FormState, value: string) => {
-    setForm(prev => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
-    if (apiError) setApiError(null);
-  };
-  const handleMainBranchChange = (selectedBrchCd: string) => {
-    // 1) 대분류 선택값 폼 상태 저장 (React Form 라이브러리 설정 등)
-    //set("campBrch", selectedBrchCd); 
-    set("campBrch1", selectedBrchCd);
-    // 2) 소분류 선택값은 대분류가 바뀌었으므로 초기화
-    set("campBrch2", ""); 
-    
-    if (!selectedBrchCd) {
-      setFilteredSubBranches([]);
-      return;
-    }
-
-    // 3) API 호출 대신, 이미 들고 있는 데이터 Pool에서 해당 대분류 객체를 찾음
-    const selectedBranch = campBrch1.find(b => b.brchCd === selectedBrchCd);
-    
-    if (selectedBranch) {
-      // 찾은 대분류 내부의 subBranches 리스트를 소분류 State에 즉시 주입 (화면 자동 갱신)
-      setFilteredSubBranches(selectedBranch.scndBrchs || []);
-    } else {
-      setFilteredSubBranches([]);
-    }
-  };
-  const handleSubmit = async () => {
-    const errs = validateForm(form);
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-
-    setLoading(true);
-    setApiError(null);
-
-    // ── REST 요청: POST /api/users ──────────────────────────
-    const result = await campService.create({
-      campId: form.campId,
-      campNm: form.campNm,
-      campDesc: form.campDesc,
-      campBrch1: form.campBrch1,
-      campBrch2: form.campBrch2,
-      campStat: form.campStat,
-      campType: form.campType,
-    });
-    // ───────────────────────────────────────────────────────
-
-    setLoading(false);
-
-    // 서버가 성공 응답을 보낸 경우 → 서버 데이터 사용
-    // 서버가 없거나 실패한 경우 → 낙관적 업데이트(optimistic update)로 로컬에 추가
-    const newItem: DataItem =
-      result.ok && result.data
-        ? {
-            campId: result.data.campId,
-            campNm: result.data.campNm,
-            campDesc: result.data.campDesc,
-            campBrch1: result.data.campBrch1,
-            campBrch2: result.data.campBrch2,
-            campStat: result.data.campStat ?? "100",
-            campType: result.data.campType ?? "real",
-          }
-        : {
-            campId: form.campId,
-            campNm: form.campNm,
-            campDesc: "100",
-            campBrch1: form.campBrch1,
-            campBrch2: form.campBrch2,
-            campStat: form.campStat,
-            campType: form.campType,
-          };
-
-    if (!result.ok) {
-      // 네트워크 오류는 무시하고 낙관적으로 진행 (데모 환경 고려)
-      // 실제 4xx/5xx 서버 에러는 사용자에게 노출
-      if (result.status > 0) {
-        setApiError(result.message);
-        return;
-      }
-    }
-
-    setSubmitted(true);
-    setTimeout(() => {
-      onSubmit(newItem);
-      onClose();
-    }, 900);
-  };
-
-  return (
-    /* backdrop */
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      {/* panel */}
-      <div
-        className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden"
-        style={{ maxHeight: "90vh" }}
-      >
-        {/* header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800 shrink-0">
-          <div>
-            <h2 className="text-neutral-50 text-lg font-semibold">캠페인 등록</h2>
-            <p className="text-neutral-500 text-xs mt-0.5">캠페인을 등록합니다</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="size-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-50 hover:bg-neutral-800 transition-colors"
-          >
-            <Close size={16} />
-          </button>
-        </div>
-
-        {/* success overlay */}
-        {submitted && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-900/95 rounded-2xl gap-3">
-            <CheckmarkFilled size={48} className="text-green-400" />
-            <p className="text-neutral-50 font-semibold text-lg">캠페인 등록 완료!</p>
-            <p className="text-neutral-400 text-sm">캠페인 목록에 추가되었습니다.</p>
-          </div>
-        )}
-
-        {/* form body */}
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4 relative" style={{ maxHeight: "60vh" }}>
-          {/* 대분류 Select */}
-        <Field label="캠페인 분류" required error={errors.campBrch1}>
-          <Select 
-            value={form.campBrch1} 
-            onValueChange={(v) => handleMainBranchChange(v)} // 💡 이 부분에서 커스텀 핸들러 함수 호출!
-          >
-            <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.campBrch1 ? "border-rose-500" : ""}`}>
-              <SelectValue placeholder="분류 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              {/* 백엔드에서 통째로 긁어온 대분류 풀(Pool)을 그려줍니다. */}
-              {campBrch1.map(r => (
-                <SelectItem key={r.brchCd} value={r.brchCd}>{r.brchNm}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-
-        {/* 소분류 Select */}
-        <Field label="캠페인 소분류" required error={errors.campBrch2}>
-          <Select 
-            value={form.campBrch2} 
-            onValueChange={(v) => set("campBrch2", v)} // 소분류 선택 값 설정
-            disabled={filteredSubBranches.length === 0} // 대분류를 고르기 전이거나 하위 소분류가 없으면 콤보박스 비활성화
-          >
-            <SelectTrigger className={`bg-neutral-950 border-neutral-700 text-neutral-50 ${errors.campBrch2 ? "border-rose-500" : ""}`}>
-              <SelectValue placeholder="소분류 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              {/* 💡 기존의 전체 목록(campBrch2) 대신 필터링 완료된 데이터(filteredSubBranches)를 돌려줍니다! */}
-              {filteredSubBranches.map(d => (
-                <SelectItem key={d.scndBrchCd} value={d.scndBrchCd}>{d.scndBrchNm}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-
-          <Field label="캠페인 명" required error={errors.campNm}>
-            <Input
-              value={form.campNm}
-              onChange={e => set("campNm", e.target.value)}
-              placeholder="카드이용 고객 승인 감지 캠페인"
-              className={`bg-neutral-950 border-neutral-700 text-neutral-50 placeholder:text-neutral-600 focus:border-blue-500 ${errors.campNm ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          <Field label="캠페인 설명" required error={errors.campDesc}>
-            <textarea
-              value={form.campDesc}
-              onChange={e => set("campDesc", e.target.value)}
-              placeholder="카드승인 고객 대상으로 승인금액 20만원 이상 고객에게 이벤트 관련 APP PUSH 발송"
-              className={`w-full h-32 p-3 bg-neutral-950 border border-neutral-700 rounded text-sm text-neutral-50 font-mono placeholder:text-neutral-600 focus:border-blue-500 focus:outline-none resize-none ${errors.campDesc ? "border-rose-500" : ""}`}
-            />
-          </Field>
-
-          <p className="text-neutral-600 text-xs pt-1">
-            <span className="text-rose-400">*</span> 필수 입력 항목 / 등록 후 상태는 <span className="text-yellow-500">설계중</span>으로 설정됩니다.
-          </p>
-
-          {apiError && (
-            <div className="flex items-start gap-2 bg-rose-950/60 border border-rose-800 rounded-lg px-3 py-2.5">
-              <WarningFilled size={14} className="text-rose-400 mt-0.5 shrink-0" />
-              <p className="text-rose-300 text-xs leading-relaxed">{apiError}</p>
-            </div>
-          )}
-        </div>
-
-        {/* footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-neutral-800 shrink-0">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg text-sm text-neutral-400 hover:text-neutral-50 hover:bg-neutral-800 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitted || loading}
-            className="px-5 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors disabled:opacity-60 flex items-center gap-2 min-w-[130px] justify-center"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin size-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                </svg>
-                처리 중...
-              </>
-            ) : (
-              <>
-                <AddLarge size={14} />
-                캠페인 등록
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── main grid ──────────────────────────────────────────────────
 type SortField = keyof DataItem;
@@ -441,12 +172,26 @@ export function CampBuilder() {
       //   sourcePosition: Position.Right,
       // },
     ]);
-  // 우클릭 메뉴 상태 관리
+  
+  type NodeType = 'start' | 'batch' | 'realtime' | 'dataformat' |'filtering' | 'cleansing' | 'sms' | 'push' ;
+  const LABEL_TO_TYPE_MAP: Record<string, NodeType> = {
+    'START': 'start', // 혹시 영문으로 표기될 경우를 대비
+    '배치 스케줄러': 'batch',
+    '실시간 스케줄러': 'realtime',
+    '데이터 포맷팅': 'dataformat',
+    '필터 조건': 'filtering',
+    '중복 제거': 'cleansing',
+    'SMS': 'sms',
+    'PUSH': 'push',
+    // ... 나머지도 추가 ...
+  };
+    // 우클릭 메뉴 상태 관리
   const [menu, setMenu] = useState<{
     id: string;
     x: number;
     y: number;
     nodePosition: { x: number; y: number };
+    nodeType: NodeType;
   } | null>(null);
 
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]); // 👈 'edges'가 여기서 선언되어야 합니다!
@@ -454,6 +199,53 @@ export function CampBuilder() {
   const [showSchedulerModal, setShowSchedulerModal] = useState(false); // 모달 표시 여부
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 알림 메시지
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+
+  const ALLOWED_NEXT_NODES: Record<NodeType, { label: string; type: NodeType }[]> = {
+    start: [
+      { label: '배치 스케줄러', type: 'batch' },
+      { label: '실시간 스케줄러', type: 'realtime' }
+    ],
+    batch: [
+      { label: '데이터 포맷팅', type: 'dataformat' }
+    ],
+    realtime: [
+      { label: '데이터 포맷팅', type: 'dataformat' }
+    ],
+    dataformat: [
+      { label: '필터 조건', type: 'filtering' },
+      { label: '중복 제거', type: 'cleansing' },
+      { label: 'SMS', type: 'sms' },
+      { label: 'PUSH', type: 'push' }
+    ],
+    filtering: [
+      { label: '중복 제거', type: 'cleansing' },
+      { label: 'SMS', type: 'sms' },
+      { label: 'PUSH', type: 'push' }
+    ],
+    cleansing: [
+      { label: 'SMS', type: 'sms' },
+      { label: 'PUSH', type: 'push' }
+    ],
+    sms : [],
+    push : [],
+    // MESSAGE: [
+    //   // { label: '종료', type: 'END' }
+    // ],
+    // END: [] // 종료 노드 뒤에는 아무것도 올 수 없음
+  };
+
+  const nodeIcons = {
+    START: <Play size={16} className="text-green-400 group-hover:scale-110 transition-transform" />,
+    batch: <Time size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />,
+    realtime: <Time size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />,
+    dataformat: <Code size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />,
+    filtering: <Split size={16} className="text-purple-400 group-hover:scale-110 transition-transform" />,
+    cleansing: <Clean size={16} className="text-purple-400 group-hover:scale-110 transition-transform" />,
+    sms: <Email size={16} className="text-purple-400 group-hover:scale-110 transition-transform" />,
+    push: <Email size={16} className="text-purple-400 group-hover:scale-110 transition-transform" />,
+    // ... 나머지도 추가 ...
+  };
 
   useEffect( () => {
     
@@ -473,11 +265,17 @@ export function CampBuilder() {
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
       event.preventDefault(); // 기본 브라우저 우클릭 메뉴 막기
+      console.log(node);
+      console.log(node.data.label);
+      const currentLabel = node.data.label as string;
+      const mappedType = LABEL_TO_TYPE_MAP[currentLabel] || 'START';
+      console.log(`클릭한 노드 라벨: ${currentLabel}, 매핑된 타입: ${mappedType}`);
       setMenu({
         id: node.id,
         x: event.clientX,
         y: event.clientY,
         nodePosition: node.position,
+        nodeType: mappedType,
       });
     },
     []
@@ -632,48 +430,30 @@ export function CampBuilder() {
                   <Add size={14} className="text-neutral-400" />
                   <span>후행 노드 추가</span>
                 </div>
-                <button
-                  onClick={() => addNextNode('실시간 스케줄러')}
-                  className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 transition-colors"
-                >
-                  <Time size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">실시간 스케줄러</span>
-                </button>
-                <button
-                  onClick={() => addNextNode('배치 스케줄러')}
-                  className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 transition-colors"
-                >
-                  <Time size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">배치 스케줄러</span>
-                </button>
-                <button
-                  onClick={() => addNextNode('데이터 포맷팅')}
-                  className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 transition-colors"
-                >
-                  <Code size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">데이터 포맷팅</span>
-                </button>
-                <button
-                  onClick={() => addNextNode('필터조건')}
-                  className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 transition-colors"
-                >
-                  <Split size={16} className="text-purple-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">필터 조건 설정</span>
-                </button>
-                <button
-                  onClick={() => addNextNode('중복제거')}
-                  className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 items-center transition-colors"
-                >
-                  <Clean size={16} className="text-blue-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">중복제거</span>
-                </button>
-                <button
-                  onClick={() => addNextNode('메시지')}
-                  className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 items-center transition-colors"
-                >
-                  <Email size={16} className="text-blue-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">메시지 발송</span>
-                </button>
+                {/* 💡 [수정] 규칙에 따라 동적으로 버튼 생성 */}
+                {ALLOWED_NEXT_NODES[menu.nodeType]?.length > 0 ? (
+                  // 허용된 후행 노드가 있는 경우
+                  ALLOWED_NEXT_NODES[menu.nodeType].map((item) => (
+                    <button
+                      key={item.type} // 각 아이템의 unique key
+                      // 💡 버튼 클릭 시 해당 노드의 label을 전달하여 생성 로직 실행
+                      onClick={() => {
+                        addNextNode(item.label);
+                        setMenu(null); // 메뉴 닫기
+                      }}
+                      className="w-full text-left px-2 py-1.5 hover:bg-neutral-800 rounded flex flex-row gap-2.5 transition-colors group"
+                    >
+                      {/* 아이콘 매핑 (없으면 기본 아이콘 표시) */}
+                      {nodeIcons[item.type as keyof typeof nodeIcons] || <Code size={16} />} 
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  ))
+                ) : (
+                  // 💡 종료 노드처럼 후행 노드가 아예 없는 경우 표시할 문구
+                  <div className="px-2 py-3 text-center text-neutral-500 text-[11px]">
+                    추가할 수 있는<br />후행 노드가 없습니다.
+                  </div>
+                )}
                 
               </div>
             )}

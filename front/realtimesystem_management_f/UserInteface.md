@@ -56,6 +56,20 @@
 <br>
 <img width="1153" height="838" alt="image" src="https://github.com/user-attachments/assets/5705c243-16fe-4508-80bc-66ac7b247dda" />
 <br>
+<h3>컴포넌트 별 후행 컴포넌트가 다르게 올 수 있음(컴포넌트 선후행 정의는 이후에 따로 뺄 예정)</h3>
+<br>
+<h3>-스케줄러</h3>
+<img width="1101" height="157" alt="image" src="https://github.com/user-attachments/assets/55a44150-82fa-4021-b19d-049d84939885" />
+<br>
+<h3>-데이터포맷팅</h3>
+<img width="1087" height="194" alt="image" src="https://github.com/user-attachments/assets/c5dc8e9a-b66e-4aba-b31e-f54695fbabd9" />
+<br>
+<h3>-필터조건</h3>
+<img width="1083" height="166" alt="image" src="https://github.com/user-attachments/assets/18e99355-2aaf-46c3-af2f-30f7b378a02f" />
+<br>
+<h3>-중복제거</h3>
+<img width="1094" height="136" alt="image" src="https://github.com/user-attachments/assets/4daaad0f-88ab-4b96-bbb9-0189d4ea5fca" />
+<br>
 <br>
 <h2>8.실시간 스케줄러 컴포넌트 화면</h2>
 <h3>실시간 캠페인용 스케줄러 정보 설정 화면, 시작시간, 종료시간까지 스케줄러가 계속 동작하면서 데이터 감지</h3>

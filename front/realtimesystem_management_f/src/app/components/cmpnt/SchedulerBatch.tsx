@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Add, Close } from "@carbon/icons-react";
 
 const Toast = ({ message }: { message: string }) => (
@@ -8,6 +8,7 @@ const Toast = ({ message }: { message: string }) => (
 );
 
 interface SchedulerProps {
+  cmpntId?: string;  
   onClose: () => void;
   onSave: (data: FormState) => void;
 }
@@ -34,8 +35,16 @@ const initialFormState: FormState = {
   schDesc: '',
 };
 
-export function SchedulerBatch({ onClose, onSave }: SchedulerProps) {
+export function SchedulerBatch({ cmpntId, onClose, onSave }: SchedulerProps) {
   const [form, setForm] = useState(initialFormState);
+
+  useEffect(() => {
+    //cmpntId가 전달되어 온 경우에만 API에서 정보를 조회
+    if (cmpntId) {
+      
+      
+    }
+  }, [cmpntId]);
 
   // 💡 제네릭으로 K와 FormState[K] 타입 자동 추론
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {

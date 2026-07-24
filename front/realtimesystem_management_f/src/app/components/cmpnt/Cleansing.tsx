@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {Calendar } from "@carbon/icons-react"; // Calendar 아이콘 추가
 
 const Toast = ({ message }: { message: string }) => (
@@ -7,6 +7,7 @@ const Toast = ({ message }: { message: string }) => (
   </div>
 );
 interface SchedulerProps {
+  cmpntId?: string;
   onClose: () => void;
   onSave: (data: { name: string }) => void;
 }
@@ -29,9 +30,15 @@ interface FormState {
   schDesc: string;
 }
 
-export function Cleansing({ onClose, onSave }: SchedulerProps){
+export function Cleansing({ cmpntId, onClose, onSave }: SchedulerProps){
   const [form, setForm] = useState(initialFormState);  
-  
+  useEffect(() => {
+            //cmpntId가 전달되어 온 경우에만 API에서 정보를 조회
+            if (cmpntId) {
+              
+              
+            }
+      }, [cmpntId]);
   const set = (key: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };

@@ -98,7 +98,7 @@ interface FormErrors {
 }
 
 interface CampManagementProps {
-  onNavigateToBuilder?: () => void; // Optional로 지정하여 안전 장치를 둡니다.
+  onNavigateToBuilder?: (campId: string) => void; // Optional로 지정하여 안전 장치를 둡니다.
 }
 
 // ── initial data ───────────────────────────────────────────────
@@ -156,7 +156,7 @@ function RegistrationModal({
   onSubmit: (item: DataItem) => void;
   campBrch1: CampBrch1[];
   campBrch2: CampBrch2[];
-  onNavigateToBuilder?: () => void;
+  onNavigateToBuilder?: (campId: string) => void;
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -165,7 +165,8 @@ function RegistrationModal({
   const [apiError, setApiError] = useState<string | null>(null);
   const [filteredSubBranches, setFilteredSubBranches] = useState<CampBrch2[]>([]);
 
-
+  // 💡 [추가] 생성이 완료된 후 돌려받은 campId를 저장할 State
+  const [createdCampId, setCreatedCampId] = useState<string>("");
 
   const set = (key: keyof FormState, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -249,9 +250,13 @@ function RegistrationModal({
         return;
       }
     }
+    //생성된 campId를 State에 보관
+    setCreatedCampId(newItem.campId);
 
     setSubmitted(true);
     onSubmit(newItem);
+
+
     // 등록 후 화면이 안닫히도록 주석 
     // setTimeout(() => {
     //   onSubmit(newItem);
@@ -322,8 +327,10 @@ function RegistrationModal({
               <button
                 type="button"
                 onClick={() => {
+
+                  
                   onClose(); // 💡 먼저 모달 창을 닫아줍니다.
-                  onNavigateToBuilder?.(); //함수 존재할때만 뷰 전환
+                  onNavigateToBuilder?.(createdCampId); //함수 존재할때만 뷰 전환
                 }}
                 className="flex-1 py-2 rounded-lg text-sm font-medium text-neutral-950 bg-green-400 hover:bg-green-300 active:bg-green-500 transition-colors font-semibold"
               >
@@ -672,7 +679,13 @@ export function CampManagement({ onNavigateToBuilder }: CampManagementProps) {
                   </button>
                   <button className="h-8 px-3 rounded-lg border border-neutral-700 bg-neutral-950 text-neutral-300 hover:bg-neutral-800 text-sm flex items-center gap-1.5 transition-colors"
                     onClick={() => {
-                      onNavigateToBuilder?.(); //함수 존재할때만 뷰 전환
+                      const selectedCampId = Array.from(selectedItems)[0]; // Set에서 선택된 campId 1개 꺼내기
+                      if(selectedCampId){
+                        console.log('navigate campId= ' + selectedCampId );
+                        onNavigateToBuilder?.(selectedCampId); //함수 존재할때만 뷰 전환
+                      }else{
+                        console.log('no selected CampId');
+                      }
                     }}
                   >
                     <FlowData size={13} />설계 정보 보기

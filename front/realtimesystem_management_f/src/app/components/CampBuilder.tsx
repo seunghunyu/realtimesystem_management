@@ -141,13 +141,19 @@ function Field({ label, required, error, children }: {
   );
 }
 
+// 1. CampBuilder가 전달받을 Props 타입 정의
+interface CampBuilderProps {
+  campId?: string | null; // 선택적이거나 null일 수 있음
+}
 
 // ── main grid ──────────────────────────────────────────────────
 type SortField = keyof DataItem;
 type SortDirection = "asc" | "desc";
 
-export function CampBuilder() {
+export function CampBuilder({ campId }: CampBuilderProps) {
   
+  console.log("설계정보 확인 campId = " + campId);
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([
       {
         id: '1',

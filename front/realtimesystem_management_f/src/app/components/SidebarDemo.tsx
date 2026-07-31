@@ -868,6 +868,13 @@ function TwoLevelSidebar({
 export function Frame760() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [activeSubSection, setActiveSubSection] = useState("campaign-management"); // 서브분류
+  // 💡 1. 선택된 캠페인 ID를 저장할 State 추가
+  const [selectedCampId, setSelectedCampId] = useState<string | null>(null);
+  const handleNavigateToBuilder = (campId: string) => {
+    setSelectedCampId(campId); // 넘겨받은 campId를 state에 저장
+    setActiveSubSection("campaign-builder"); // Builder 뷰로 전환
+  };
+
   // 현재 activeSection 상태에 맞는 메인 화면 콘텐츠를 리턴합니다.
   const renderContent = () => {
     switch (activeSection) {
@@ -875,7 +882,12 @@ export function Frame760() {
         return <AnalyticsDashboard />;
       case "dashboard":
         if(activeSubSection === "campaign-management") {
-          return <CampManagement onNavigateToBuilder={() => setActiveSubSection("campaign-builder")}/>;
+          return <CampManagement onNavigateToBuilder={handleNavigateToBuilder}/>;
+        } else if(activeSubSection === "campaign-builder") {
+           return (
+            // 💡 4. Builder 컴포넌트에 저장해둔 campId 전달!
+            <CampBuilder campId={selectedCampId} />
+          );
         } else if(activeSubSection === "campaign-approval-list") {
           return <CampApprovalList />;
         } else if(activeSubSection === "item-management") {

@@ -12,10 +12,12 @@ interface SchedulerProps {
   onSave: (data: { name: string }) => void;
 }
 
+const today = new Date().toLocaleDateString('sv-SE');
+
 const initialFormState = {
     schNm: '',
-    strDt: '',
-    endDt: '',
+    strDt: today,
+    endDt: today,
     strTm: '09:00',
     endTm: '18:00',
     schDesc: '',

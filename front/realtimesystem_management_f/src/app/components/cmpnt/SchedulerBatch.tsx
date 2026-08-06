@@ -24,10 +24,13 @@ interface FormState {
   schDesc: string;
 }
 
+const today = new Date().toLocaleDateString('sv-SE');
+
 const initialFormState: FormState = {
   schNm: '',
-  strDt: '',
-  endDt: '',
+  strDt: today,
+  endDt: today,
+  
   strTm: '09:00',
   endTm: '18:00',
   tmpTime: '',

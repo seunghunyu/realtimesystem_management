@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CommonUtil {
     private final CampRepository campRepository;
-    private String generateNextItemId(String type) {
+
+    public String generateNextItemId(String type) {
         String prefix = "C";
         if(type.equals(GEN_KEY_CODE.CAMP.getCode())){
             prefix = GEN_KEY_CODE.CAMP.getPrefix();

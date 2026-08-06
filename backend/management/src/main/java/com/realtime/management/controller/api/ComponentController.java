@@ -26,15 +26,15 @@ public class ComponentController {
         return cmpntService.save(request);
     }
 
-    @PutMapping("/component/{type}/{cmpntId}")
-    public ComponentResponse update(@PathVariable String cmpntId,
-                                    @RequestBody ComponentRequest request){
-        return cmpntService.update(cmpntId, request);
+//    @PutMapping("/component/{type}/{cmpntId}")
+    @PutMapping("/component/{type}")
+    public ComponentResponse update(@RequestBody ComponentRequest request){
+        return cmpntService.update(request);
     }
 
-    @DeleteMapping("/component/{type}/{cmpntId}")
-    public void deleteCmpnt(@PathVariable String cmpntId){
-        cmpntService.delete(cmpntId);
+    @DeleteMapping("/component/{type}")
+    public void deleteCmpnt(@RequestBody ComponentRequest request){
+        cmpntService.delete(request);
     }
 
     @GetMapping("/component/{type}/{cmpntId}")

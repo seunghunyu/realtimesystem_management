@@ -1,5 +1,6 @@
 package com.realtime.management.service.component.strategy;
 
+import com.realtime.management.common.CommonUtil;
 import com.realtime.management.dto.camp.ComponentRequest;
 import com.realtime.management.dto.camp.ComponentResponse;
 import com.realtime.management.dto.camp.SchedulerData;
@@ -22,6 +23,7 @@ public class FilteringStrategy implements ComponentStrategy{
     private final ComponentRepository componentRepository;
     private final CampSchInfoRepository campSchInfoRepository;
     private final CampSchTimeRepository campSchTimeRepository;
+    private final CommonUtil commonUtil;
 
     @Override
     public String getObjKind() {
@@ -48,7 +50,8 @@ public class FilteringStrategy implements ComponentStrategy{
         componentRepository.save(cmpnt);
 
         CampSchInfo schInfo = CampSchInfo.builder()
-                .id(new CampSchInfoId(request.getCmpntId(), request.getCampId()))
+//                .id(new CampSchInfoId(request.getCmpntId(), request.getCampId()))
+                .schId(commonUtil.generateNextItemId("C"))
                 .schNm(data.getSchNm())
                 .objKind(data.getObjKind())
                 .schDesc(data.getSchDesc())
@@ -80,9 +83,9 @@ public class FilteringStrategy implements ComponentStrategy{
                 .orElseThrow(()->new BusinessException(ErrorCode.CMPNT_NOT_FOUND));
         if (data == null) return ComponentResponse.from(cmpnt);
 
-        CampSchInfoId schInfoId = new CampSchInfoId(request.getCmpntId(), request.getCampId());
+//        CampSchInfoId schInfoId = new CampSchInfoId(request.getCmpntId(), request.getCampId());
         CampSchInfo schInfo = campSchInfoRepository
-                .findById(schInfoId).orElseThrow(() -> new BusinessException(ErrorCode.SCH_NOT_FOUND));
+                .findById(request.getCmpntId()).orElseThrow(() -> new BusinessException(ErrorCode.SCH_NOT_FOUND));
         schInfo.update(request.getSchedulerData());
         if ("batch".equalsIgnoreCase(data.getObjKind())) {
             // ① 해당 sch_id의 기존 시간 목록 전체 삭제
@@ -106,8 +109,8 @@ public class FilteringStrategy implements ComponentStrategy{
 
     @Override
     public void delete(ComponentRequest request) {
-        CampSchInfoId id = new CampSchInfoId(request.getCmpntId(), request.getCampId());
-        campSchInfoRepository.deleteById(id);
+//        CampSchInfoId id = new CampSchInfoId(request.getCmpntId(), request.getCampId());
+        campSchInfoRepository.deleteById(request.getCmpntId());
         SchedulerData data = request.getSchedulerData();
         if ("batch".equalsIgnoreCase(data.getObjKind())) {
             // ① 해당 sch_id의 기존 시간 목록 전체 삭제
@@ -120,8 +123,9 @@ public class FilteringStrategy implements ComponentStrategy{
 
         Cmpnt cmpnt = componentRepository.findById(request.getCmpntId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CMPNT_NOT_FOUND));
-        CampSchInfoId id = new CampSchInfoId(request.getCmpntId(), request.getCampId());
-        CampSchInfo schInfo = campSchInfoRepository.findById(id).orElseThrow(()->new BusinessException(ErrorCode.CMP_NOT_FOUND));
+//        CampSchInfoId id = new CampSchInfoId(request.getCmpntId(), request.getCampId());
+        CampSchInfo schInfo = campSchInfoRepository.findById(request.getCmpntId())
+                .orElseThrow(()->new BusinessException(ErrorCode.CMP_NOT_FOUND));
         List<String> times = null;
         if("batch".equalsIgnoreCase(request.getCmpntType())) {
             List<CampSchTime> timeList = campSchTimeRepository.findAllByIdSchId(request.getCmpntId());

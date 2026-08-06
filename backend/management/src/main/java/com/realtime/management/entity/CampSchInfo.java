@@ -17,8 +17,12 @@ import java.util.List;
 @Builder
 public class CampSchInfo {
 
-    @EmbeddedId
-    private CampSchInfoId id; //schId + campId 복합 키
+//    @EmbeddedId
+//    private CampSchInfoId id; //schId + campId 복합 키
+
+    @Id // 복합키(CampSchInfoId)를 제거하고 단일 PK로 변경
+    @Column(name = "sch_id")
+    private String schId;
 
     @Column(name = "sch_nm")
     private String schNm;
@@ -42,8 +46,6 @@ public class CampSchInfo {
     @Column(name = "end_tm")
     private String endTm;
 
-    // 💡 부모 엔티티(CampInfo)와의 연관관계 및 MapsId 매핑
-    @MapsId("campId") // CampSchInfoId 내부의 campId 필드와 연결
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "camp_id")
     private Camp camp;

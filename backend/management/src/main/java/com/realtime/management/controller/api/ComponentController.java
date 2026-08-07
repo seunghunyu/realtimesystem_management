@@ -17,7 +17,7 @@ public class ComponentController {
     private final ComponentService cmpntService;
 
     //components
-    @PostMapping("/component/{type}/save")
+    @PostMapping("/{type}/save")
     public ComponentResponse save(@PathVariable("type") String type, @Valid @RequestBody ComponentRequest request){
         // 💡 URL의 {type}과 DTO 내부의 타입이 일치하는지 검증
         if (!type.equalsIgnoreCase(request.getCmpntType())) {
@@ -27,17 +27,17 @@ public class ComponentController {
     }
 
 //    @PutMapping("/component/{type}/{cmpntId}")
-    @PutMapping("/component/{type}")
+    @PutMapping("/{type}")
     public ComponentResponse update(@RequestBody ComponentRequest request){
         return cmpntService.update(request);
     }
 
-    @DeleteMapping("/component/{type}")
+    @DeleteMapping("/{type}")
     public void deleteCmpnt(@RequestBody ComponentRequest request){
         cmpntService.delete(request);
     }
 
-    @GetMapping("/component/{type}/{cmpntId}")
+    @GetMapping("/{type}/{cmpntId}")
     public ComponentResponse findByCmpntId(@PathVariable String cmpntId){
         return cmpntService.findById(cmpntId);
     }

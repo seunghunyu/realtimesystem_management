@@ -10,7 +10,10 @@
 //   GET    /api/users/:id        → single user (bonus)
 
 import { apiClient, type ApiResult } from "../lib/apiClient";
-
+import {
+  Node,
+  Edge
+} from '@xyflow/react';
 // ── payload / response types ─────────────────────────────────────────────────
 
 export interface CampDto {
@@ -67,6 +70,10 @@ export interface CampBrch1{
   scndBrchs: CampBrch2[];
 }
 
+export interface CampDesignDto {
+  nodes: Node[];
+  edges: Edge[];
+}
 
 // ── service ──────────────────────────────────────────────────────────────────
 
@@ -77,6 +84,10 @@ export const campService = {
    */
   list(): Promise<ApiResult<CampDto[]>> {
     return apiClient.get<CampDto[]>("/api/camp/list");
+  },
+
+  getCampDesign(campId: string): Promise<ApiResult<CampDesignDto>> {
+    return apiClient.get<CampDesignDto>(`/api/camp/design/${campId}`);
   },
 
   /**

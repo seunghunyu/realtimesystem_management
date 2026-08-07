@@ -198,12 +198,42 @@ export function CampBuilder({ campId }: CampBuilderProps) {
     nodeType: NodeType;
   } | null>(null);
 
+  
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]); // 👈 'edges'가 여기서 선언되어야 합니다!
   const [componentType, setComponentType] = useState<'batch' | 'realtime' | 'filtering' | 'dataformat' | 'cleansing' | 'push' | 'sms' | null>(null);
   const [showSchedulerModal, setShowSchedulerModal] = useState(false); // 모달 표시 여부
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 알림 메시지
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  
 
+  //campId가 존재할 때 기존 설계 데이터(노드/엣지) 불러오기
+  useEffect(() => {
+  if (!campId) return;
+
+  const fetchCampFlowData = async () => {
+    try {
+      const res = await campService.getCampDesign(campId);
+
+      // 💡 1. res.ok가 true인 성공 케이스로 타입 Narrowing
+      if (res.ok) {
+        // res.data 가 CampDesignDto 타입으로 완전히 추론됩니다.
+        const designData = res.data;
+
+        if (designData && designData.nodes && designData.nodes.length > 0) {
+          setNodes(designData.nodes);
+          setEdges(designData.edges || []);
+        }
+      } else {
+        // 💡 2. 실패한 경우 (res.ok === false)
+        console.error("캠페인 설계 조회 실패:", res.message);
+      }
+    } catch (error) {
+      console.error("캠페인 설계 정보를 불러오는 중 에러 발생:", error);
+    }
+  };
+
+  fetchCampFlowData();
+}, [campId, setNodes, setEdges]);
 
   const ALLOWED_NEXT_NODES: Record<NodeType, { label: string; type: NodeType }[]> = {
     start: [
@@ -328,14 +358,23 @@ export function CampBuilder({ campId }: CampBuilderProps) {
     if (!selectedNodeId) return;
 
     console.log('스케줄러 저장 데이터:', data);
-    const savedCmpntId = typeof data === 'string' ? data : data?.cmpntId;
+
+    // 전달받은 객체가 문자열 형태일 경우 및 객체 형태({ cmpntId: "..." }) 모두 대응
+    const savedCmpntId = 
+    typeof typeof data === 'string'
+      ? data
+      : (data?.schId || data?.cmpntId || '');
+   
     // A. 해당 노드의 isConfigured 상태를 true(실선)로 업데이트
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === selectedNodeId) {
           return {
             ...node,
-            data: { ...node.data, isConfigured: true, cmpntId: savedCmpntId },
+            data: { 
+              ...node.data, 
+              isConfigured: true, 
+              cmpntId: savedCmpntId },
           };
         }
         return node;
@@ -389,6 +428,26 @@ export function CampBuilder({ campId }: CampBuilderProps) {
   }
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const selectedCmpntId = selectedNode?.data?.cmpntId as string | undefined;
+  
+  // 💡 선택된 노드의 이전(Parent) 노드 ID 구하기
+  const targetEdge = edges.find((e) => e.target === selectedNodeId);
+  const fromCmpntId = targetEdge ? targetEdge.source : undefined;
+  
+  //최종 '설계 완료' 버튼 클릭 시 전체 설계 구조 DB 저장
+  const handleSaveAll = async () => {
+    try {
+      const payload = {
+        campId: campId,
+        nodes: nodes,
+        edges: edges,
+      };
+      console.log("전체 저장 구조:", payload);
+      // await campService.saveCampDesign(payload);
+      showToast("전체 설계 저장이 완료되었습니다.");
+    } catch (error) {
+      console.error("저장 오류:", error);
+    }
+  };
 
   return (
     <>
@@ -547,6 +606,8 @@ export function CampBuilder({ campId }: CampBuilderProps) {
             {componentType === 'realtime' && (
               <SchedulerRealTime 
                 cmpntId={selectedCmpntId}
+                campId={campId || undefined}
+                fromCmpntId={fromCmpntId}
                 onClose={() => setComponentType(null)} 
                 onSave={handleComponentSave} 
               />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {Calendar } from "@carbon/icons-react"; // Calendar 아이콘 추가
-
+import { Calendar } from "@carbon/icons-react"; // Calendar 아이콘 추가
+import { cmpntService, SchDto } from '../../services/cmpntService';
+import { ComponentRequest, ComponentResponse } from "../../services/cmpntType";
 const Toast = ({ message }: { message: string }) => (
   <div className="fixed bottom-5 right-5 z-[100] bg-gray-900 border border-gray-700 text-white px-5 py-3 rounded-xl shadow-2xl text-sm animate-fade-in-up">
     ✅ {message}
@@ -8,8 +9,10 @@ const Toast = ({ message }: { message: string }) => (
 );
 interface SchedulerProps {
   cmpntId?: string;    
+  campId?: string;
+  fromCmpntId?: string;
   onClose: () => void;
-  onSave: (data: { name: string }) => void;
+  onSave: (data: ComponentResponse) => void;
 }
 
 const today = new Date().toLocaleDateString('sv-SE');
@@ -31,9 +34,30 @@ interface FormState {
   endTm: string;
   schDesc: string;
 }
+interface FormErrors {
+  schNm?:string;
+  strDt?: string;
+  endDt?: string;
+  strTm?: string;
+  endTm?: string;
+  schDesc?: string;
+}
+function validateForm(f: FormState): FormErrors {
+  const e: FormErrors = {};
+  if (!f.schNm.trim()) e.schNm = "스케줄 명을 입력해주세요.";
+  if (!f.strDt) e.strDt = "시작 일자를 선택해주세요.";
+  if (!f.endDt) e.endDt = "종료 일자를 선택해주세요.";
+  if (!f.strTm) e.strTm = "시작 시간을 입력해주세요.";
+  if (!f.endTm) e.endTm = "종료 시간을 입력해주세요.";
+  return e;
+}
 
-export function SchedulerRealTime({ cmpntId, onClose, onSave }: SchedulerProps){
-  const [form, setForm] = useState(initialFormState);  
+export function SchedulerRealTime({ cmpntId, campId, fromCmpntId, onClose, onSave }: SchedulerProps){
+  const [form, setForm] = useState<FormState>(initialFormState);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+
   useEffect(() => {
       //cmpntId가 전달되어 온 경우에만 API에서 정보를 조회
       if (cmpntId) {
@@ -46,9 +70,50 @@ export function SchedulerRealTime({ cmpntId, onClose, onSave }: SchedulerProps){
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    // 저장 로직 (예: API 호출)
-    // onSave(form);
+  const handleSave = async() => {
+
+    const errs = validateForm(form);
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+
+    setLoading(true);
+    setApiError(null);
+    try {
+      const cmpntType = 'realtime';
+      const payload: ComponentRequest = {
+        cmpntId: cmpntId || '',
+        cmpntNm: form.schNm.trim(),
+        cmpntDesc: form.schDesc.trim(),
+        cmpntType: cmpntType,
+        campId: campId || '',
+        fromCmpntId: fromCmpntId || '',
+        schedulerData: {
+          schId: cmpntId || '',
+          schNm: form.schNm.trim(),
+          schDesc: form.schDesc.trim(),
+          campId: campId || '',
+          strDt: form.strDt,
+          endDt: form.endDt,
+          strTm: form.strTm,
+          endTm: form.endTm,
+        }
+      };
+      // ── REST 요청: POST /api/cmpnt/sch ──────────────────────────
+      const result = await cmpntService.saveComponent(cmpntType, payload);
+    
+      
+      if (!result.ok) {
+        setApiError(result.message);
+        return;
+      }
+
+      onSave(result.data);
+    } catch (err) {
+      setLoading(false);
+      setApiError("저장 중 오류가 발생했습니다.");
+    }
   };
 
   return (

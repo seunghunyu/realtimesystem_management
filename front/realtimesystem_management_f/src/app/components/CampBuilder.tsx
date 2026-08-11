@@ -67,6 +67,7 @@ import { Filtering } from "./cmpnt/Filtering";
 import { Push } from "./cmpnt/Push";
 import { SMS } from "./cmpnt/SMS";
 import { Cleansing } from "./cmpnt/Cleansing";
+import { cmpntService } from "../services/cmpntService";
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
   campId: string;
@@ -154,11 +155,11 @@ export function CampBuilder({ campId }: CampBuilderProps) {
   
   console.log("설계정보 확인 campId = " + campId);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<CustomNodeData>>([
       {
         id: '1',
         type: 'input',
-        data: { label: 'START', isConfigured: true, cmpntId: '', },
+        data: { label: 'START', isConfigured: true, cmpnt: { cmpntId: 'START' } },
         position: { x: 50, y: 150 },
         sourcePosition: Position.Right,
       },
@@ -204,7 +205,9 @@ export function CampBuilder({ campId }: CampBuilderProps) {
   const [showSchedulerModal, setShowSchedulerModal] = useState(false); // 모달 표시 여부
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 알림 메시지
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
 
   //campId가 존재할 때 기존 설계 데이터(노드/엣지) 불러오기
   useEffect(() => {
@@ -374,7 +377,7 @@ export function CampBuilder({ campId }: CampBuilderProps) {
             data: { 
               ...node.data, 
               isConfigured: true, 
-              cmpntId: savedCmpntId },
+              cmpnt: savedCmpntId },
           };
         }
         return node;
@@ -421,13 +424,17 @@ export function CampBuilder({ campId }: CampBuilderProps) {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // 노드의 data 객체에 들어갈 타입 예시
-  interface CustomNodeData {
-    label: string;
-    cmpntId?: string; // 💡 저장 후 서버에서 받은 컴포넌트 ID
+  interface CustomNodeData  extends Record<string, any> {
+    label?: string;
+    // cmpnt?: string; // 💡 저장 후 서버에서 받은 컴포넌트 ID
+    cmpnt?:{
+      cmpntId: string;
+      [key: string]: any; // 추가적인 속성 허용
+    }
     isSaved?: boolean; // 💡 저장 완료 여부
   }
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
-  const selectedCmpntId = selectedNode?.data?.cmpntId as string | undefined;
+  const selectedCmpntId = selectedNode?.data?.cmpnt?.cmpntId as string | undefined;
   
   // 💡 선택된 노드의 이전(Parent) 노드 ID 구하기
   const targetEdge = edges.find((e) => e.target === selectedNodeId);
@@ -442,7 +449,25 @@ export function CampBuilder({ campId }: CampBuilderProps) {
         edges: edges,
       };
       console.log("전체 저장 구조:", payload);
-      // await campService.saveCampDesign(payload);
+      setLoading(true);
+      if(campId == null || campId == undefined){
+        console.error("campId가 존재하지 않습니다. 캠페인 설계 저장이 불가합니다.");
+        setLoading(false);
+        return;
+      }
+      
+      const result = await campService.saveCampDesign(campId, payload);
+
+      setLoading(false);
+      
+      if (!result.ok) {
+        return;
+      }
+      // 1. 저장 성공 오버레이 활성화
+      setSubmitted(true);
+      // 2. 1초 대기 (완료 연출 확인)
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
       showToast("전체 설계 저장이 완료되었습니다.");
     } catch (error) {
       console.error("저장 오류:", error);
@@ -470,12 +495,21 @@ export function CampBuilder({ campId }: CampBuilderProps) {
                 <button
                   // onClick={() => setShowModal(true)}
                   // onClick={() => }
+                  onClick={handleSaveAll} 
+                  disabled={loading}
                   className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-2 transition-colors"
                 >
                   <AddLarge size={15} />
                   설계 완료
                 </button>
               </div>
+              {submitted && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-900/95 rounded-2xl gap-3 animate-fade-in">
+                          <CheckmarkFilled size={48} className="text-green-400 animate-bounce" />
+                          <p className="text-neutral-50 font-semibold text-lg">등록 완료!</p>
+                          <p className="text-neutral-400 text-xs">캠페인 설계 정보가 성공적으로 저장되었습니다.</p>
+                        </div>
+                      )}
             </div>
 
           </div>

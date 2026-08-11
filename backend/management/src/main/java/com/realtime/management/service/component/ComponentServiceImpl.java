@@ -51,8 +51,12 @@ public class ComponentServiceImpl implements ComponentService{
     }
 
     @Override
-    public ComponentResponse findById(String cmpntId) {
-        return null;
+    public ComponentResponse findById(ComponentRequest request) {
+        ComponentStrategy strategy = strategies.stream()
+                .filter(s -> s.getObjKind().equalsIgnoreCase(request.getCmpntType()))
+                .findFirst()
+                .orElseThrow(()-> new BusinessException(ErrorCode.CMPNT_NOT_FOUND));
+        return strategy.findById(request);
     }
 
     @Override

@@ -11,7 +11,7 @@ public interface ComponentService {
     ComponentResponse update(ComponentRequest request);
     void delete(ComponentRequest request);
 
-    ComponentResponse findById(String cmpntId);
+    ComponentResponse findById(ComponentRequest request);
     List<ComponentResponse> findAll();
 
 

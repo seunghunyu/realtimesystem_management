@@ -1,20 +1,19 @@
 package com.realtime.management.service.camp;
 
-import com.realtime.management.dto.camp.CampBrchResponse;
-import com.realtime.management.dto.camp.CampRequest;
-import com.realtime.management.dto.camp.CampResponse;
-import com.realtime.management.dto.camp.HierarchyBrchResponse;
+import com.realtime.management.dto.camp.*;
 import com.realtime.management.dto.dept.DeptsResponse;
 import com.realtime.management.dto.item.ItemResponse;
 import com.realtime.management.entity.*;
 import com.realtime.management.exception.BusinessException;
 import com.realtime.management.exception.ErrorCode;
 import com.realtime.management.repository.CampBrchRepository;
+import com.realtime.management.repository.CampDesignRepository;
 import com.realtime.management.repository.CampRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -23,6 +22,7 @@ import java.util.List;
 public class CampServiceImpl implements CampService{
     private final CampRepository campRepository;
     private final CampBrchRepository campBrchRepository;
+    private final CampDesignRepository campDesignRepository;
 
     @Override
     public CampResponse save(CampRequest request) {
@@ -89,6 +89,44 @@ public class CampServiceImpl implements CampService{
                 .map(HierarchyBrchResponse::from)
                 .toList();
     }
+
+    @Override
+    public CampDesignDto getCampDesign(String campId) {
+        return campDesignRepository.findById(campId)
+                .map(CampDesign::getDesignData)
+                // 저장된 디자인 정보가 없으면 빈 nodes, edges 반환
+                .orElseGet(() -> new CampDesignDto(Collections.emptyList(), Collections.emptyList()));
+    }
+
+    @Override
+    public void saveCampDesign(String campId, CampDesignDto designDto) {
+        // 이미 존재하면 수정(JPA 더티 체킹/save), 없으면 신규 저장
+        CampDesign campDesign = campDesignRepository.findById(campId)
+                .map(design -> {
+                    design.setDesignData(designDto);
+                    return design;
+                })
+                .orElseGet(() -> new CampDesign(campId, designDto));
+
+        campDesignRepository.save(campDesign);
+    }
+
+    @Override
+    public void updateCampDesign(String campId, CampDesignDto designDto) {
+        CampDesign campDesign = campDesignRepository.findById(campId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 캠페인 디자인 정보를 찾을 수 없습니다. id=" + campId));
+
+        // 객체의 필드만 변경하면 트랜잭션 종료 시 JPA 더티 체킹으로 UPDATE 쿼리 실행
+        campDesign.setDesignData(designDto);
+    }
+
+    @Override
+    public void deleteCampDesign(String campId) {
+        if (campDesignRepository.existsById(campId)) {
+            campDesignRepository.deleteById(campId);
+        }
+    }
+
     // 💡 2. 다음 순번의 ID를 계산해내는 헬퍼 메서드
     private String generateNextItemId() {
         String maxId = campRepository.findMaxCampId(); // 예: "I0000005"

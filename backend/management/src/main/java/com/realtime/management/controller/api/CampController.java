@@ -5,6 +5,7 @@ import com.realtime.management.entity.Camp;
 import com.realtime.management.service.camp.CampService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,6 +46,36 @@ public class CampController {
         return campService.findAll();
     }
 
+    @GetMapping("/design/{campId}")
+    public ResponseEntity<CampDesignDto> getCampDesign(@PathVariable String campId){
+        CampDesignDto design = campService.getCampDesign(campId);
+        return ResponseEntity.ok(design);
+    }
+    // POST /api/camp/design/{campId}
+    @PostMapping("/design/{campId}")
+    public ResponseEntity<Void> saveCampDesign(
+            @PathVariable String campId,
+            @RequestBody CampDesignDto designDto
+    ) {
+        campService.saveCampDesign(campId, designDto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/design/{campId}")
+    public ResponseEntity<Void> updateCampDesign(
+            @PathVariable String campId,
+            @RequestBody CampDesignDto designDto
+    ) {
+        campService.updateCampDesign(campId, designDto);
+        return ResponseEntity.ok().build();
+    }
+
+    // DELETE /api/camp/design/{campId} (삭제)
+    @DeleteMapping("/design/{campId}")
+    public ResponseEntity<Void> deleteCampDesign(@PathVariable String campId) {
+        campService.deleteCampDesign(campId);
+        return ResponseEntity.ok().build();
+    }
 
 }
 

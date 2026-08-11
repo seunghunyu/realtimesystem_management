@@ -40,6 +40,7 @@ import {
 import { Badge } from "./ui/badge";
 import { deptService, roleService } from "../services/codevalService";
 
+
 // ── types ──────────────────────────────────────────────────────
 interface DataItem {
   userId: string;
@@ -196,6 +197,8 @@ function RegistrationModal({
       userName: form.user_name.trim(),
       password: form.password,
       roleCd: form.role_cd,
+      roleNm: form.role_nm,
+      deptCd: form.dept_cd,
       deptNm: form.dept_nm,
       address: form.address.trim(),
     });

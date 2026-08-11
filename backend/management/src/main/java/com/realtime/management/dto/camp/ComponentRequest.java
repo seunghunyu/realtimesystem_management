@@ -27,4 +27,22 @@ public class ComponentRequest {
     private DataFormatData dataFormatData;
     private MessageData messageData;
     private PushData pushData;
+
+    @Override
+    public String toString() {
+        return "ComponentRequest{" +
+                "cmpntId='" + cmpntId + '\'' +
+                ", cmpntNm='" + cmpntNm + '\'' +
+                ", cmpntDesc='" + cmpntDesc + '\'' +
+                ", cmpntType='" + cmpntType + '\'' +
+                ", campId='" + campId + '\'' +
+                ", fromCmpntId='" + fromCmpntId + '\'' +
+                ", schedulerData=" + schedulerData +
+                ", filteringData=" + filteringData +
+                ", cleansingData=" + cleansingData +
+                ", dataFormatData=" + dataFormatData +
+                ", messageData=" + messageData +
+                ", pushData=" + pushData +
+                '}';
+    }
 }

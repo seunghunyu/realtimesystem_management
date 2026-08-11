@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar } from "@carbon/icons-react"; // Calendar 아이콘 추가
+import { Calendar, CheckmarkFilled, Close } from "@carbon/icons-react"; // Calendar 아이콘 추가
 import { cmpntService, SchDto } from '../../services/cmpntService';
 import { ComponentRequest, ComponentResponse } from "../../services/cmpntType";
+import { campService } from '../../services/campService';
 const Toast = ({ message }: { message: string }) => (
   <div className="fixed bottom-5 right-5 z-[100] bg-gray-900 border border-gray-700 text-white px-5 py-3 rounded-xl shadow-2xl text-sm animate-fade-in-up">
     ✅ {message}
@@ -57,12 +58,44 @@ export function SchedulerRealTime({ cmpntId, campId, fromCmpntId, onClose, onSav
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
       //cmpntId가 전달되어 온 경우에만 API에서 정보를 조회
+      console.log("cmpntId:" +  cmpntId);
+      console.log("campId:" +  campId);
+      console.log("fromCmpntId:" +  fromCmpntId);
       if (cmpntId) {
-        
-        
+        const fetchCmpntData = async () => {
+          try {
+              const requestPayload: ComponentRequest = {
+                cmpntId: cmpntId,
+                cmpntType: 'scheduler',
+              };
+
+              // 1. API 호출 (type 파라미터는 해당 폼의 컴포넌트 구분에 맞게 전달 - 예: 'scheduler')
+              const result = await cmpntService.getSchInfo(requestPayload);
+              if(!result.ok){
+                console.error("컴포넌트 데이터 조회 실패:", result.message);
+                return;
+              }
+
+              // 2. 응답 데이터를 기반으로 form 상태 채우기
+              if (result.data) {
+                setForm({
+                  schNm: result.data.schedulerData.schNm || '',
+                  schDesc: result.data.schedulerData.schDesc || '',
+                  strDt: result.data.schedulerData.strDt || '',
+                  endDt: result.data.schedulerData.endDt || '',
+                  strTm: result.data.schedulerData.strTm || '',
+                  endTm: result.data.schedulerData.endTm || '',
+                });
+              }
+            } catch (error) {
+              console.error("컴포넌트 데이터 조회 실패:", error);
+            }
+       };
+       fetchCmpntData();    
       }
     }, [cmpntId]);
 
@@ -81,7 +114,7 @@ export function SchedulerRealTime({ cmpntId, campId, fromCmpntId, onClose, onSav
     setLoading(true);
     setApiError(null);
     try {
-      const cmpntType = 'realtime';
+      const cmpntType = 'scheduler';
       const payload: ComponentRequest = {
         cmpntId: cmpntId || '',
         cmpntNm: form.schNm.trim(),
@@ -98,18 +131,28 @@ export function SchedulerRealTime({ cmpntId, campId, fromCmpntId, onClose, onSav
           endDt: form.endDt,
           strTm: form.strTm,
           endTm: form.endTm,
+          objKind : 'realtime'
         }
       };
+      
       // ── REST 요청: POST /api/cmpnt/sch ──────────────────────────
       const result = await cmpntService.saveComponent(cmpntType, payload);
-    
+
+      
+      setLoading(false);
       
       if (!result.ok) {
         setApiError(result.message);
         return;
       }
+      // 💡 1. 저장 성공 오버레이 활성화
+      setSubmitted(true);
+      // 💡 2. 1초 대기 (완료 연출 확인)
+      await new Promise((resolve) => setTimeout(resolve, 900));
 
       onSave(result.data);
+      onClose();
+
     } catch (err) {
       setLoading(false);
       setApiError("저장 중 오류가 발생했습니다.");
@@ -186,8 +229,18 @@ export function SchedulerRealTime({ cmpntId, campId, fromCmpntId, onClose, onSav
         </div>
         <div className="px-6 py-4 bg-neutral-800/50 border-t border-neutral-800 flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-neutral-200 text-sm font-medium transition-colors">취소</button>
-          <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors">확인</button>
+          <button onClick={handleSave} 
+                  disabled={loading}
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors">확인</button>
         </div>
+        {/* 💡 등록 완료 성공 오버레이 */}
+        {submitted && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-900/95 rounded-2xl gap-3 animate-fade-in">
+            <CheckmarkFilled size={48} className="text-green-400 animate-bounce" />
+            <p className="text-neutral-50 font-semibold text-lg">등록 완료!</p>
+            <p className="text-neutral-400 text-xs">스케줄러 정보가 성공적으로 저장되었습니다.</p>
+          </div>
+        )}
       </div>
     </div>
   );

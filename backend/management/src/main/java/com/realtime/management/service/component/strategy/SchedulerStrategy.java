@@ -1,5 +1,6 @@
 package com.realtime.management.service.component.strategy;
 
+import com.realtime.management.common.CommonUtil;
 import com.realtime.management.dto.camp.ComponentRequest;
 import com.realtime.management.dto.camp.ComponentResponse;
 import com.realtime.management.dto.camp.SchedulerData;
@@ -23,7 +24,7 @@ public class SchedulerStrategy implements ComponentStrategy{
     private final ComponentRepository componentRepository;
     private final CampSchInfoRepository campSchInfoRepository;
     private final CampSchTimeRepository campSchTimeRepository;
-
+    private final CommonUtil commonUtil;
     @Override
     public String getObjKind() {
         return "scheduler";
@@ -32,8 +33,14 @@ public class SchedulerStrategy implements ComponentStrategy{
     @Override
     public ComponentResponse save(ComponentRequest request) {
         SchedulerData data = request.getSchedulerData();
+        String cmpntId = "";
         if(data == null){
             throw new IllegalArgumentException("스케줄러 저장에 필요한 상세 데이터(schedulerData)가 없습니다.");
+        }
+        if(data.getSchId().isEmpty()){
+            cmpntId= commonUtil.generateNextItemId("C");
+            data.setSchId(cmpntId);
+            request.setCmpntId(cmpntId);
         }
         Camp camp = campRepository.findById(request.getCampId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CMP_NOT_FOUND));
@@ -42,6 +49,7 @@ public class SchedulerStrategy implements ComponentStrategy{
                 .cmpntId(request.getCmpntId())
                 .cmpntNm(request.getCmpntNm())
                 .cmpntDesc(request.getCmpntDesc())
+                .cmpntType(request.getCmpntType())
                 .camp(camp)
                 .fromCmpntId(request.getFromCmpntId())
                 .build();
@@ -50,10 +58,11 @@ public class SchedulerStrategy implements ComponentStrategy{
 
         CampSchInfo schInfo = CampSchInfo.builder()
 //                .id(new CampSchInfoId(request.getCmpntId(), request.getCampId()))
-
+                .schId(data.getSchId())
                 .schNm(data.getSchNm())
                 .objKind(data.getObjKind())
                 .schDesc(data.getSchDesc())
+                .camp(camp)
                 .strDt(data.getStrDt())
                 .endDt(data.getEndDt())
                 .strTm(data.getStrTm())

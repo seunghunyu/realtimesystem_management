@@ -119,8 +119,8 @@ public class FilteringStrategy implements ComponentStrategy{
     }
 
     @Override
+//    public ComponentResponse findById(ComponentRequest request) {
     public ComponentResponse findById(ComponentRequest request) {
-
         Cmpnt cmpnt = componentRepository.findById(request.getCmpntId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CMPNT_NOT_FOUND));
 //        CampSchInfoId id = new CampSchInfoId(request.getCmpntId(), request.getCampId());

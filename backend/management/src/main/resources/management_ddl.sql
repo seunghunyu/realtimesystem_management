@@ -169,6 +169,7 @@ create table camp_scnd_brch(
 create table camp_sch_info(
 	sch_id varchar(12) not null,
 	sch_nm varchar(48) not null,
+	sch_desc varchar(256),
 	camp_id varchar(48) not null,
 	obj_kind varchar(12) not null default 'realtime',
 	str_dt varchar(12) not null,
@@ -183,4 +184,12 @@ create table camp_sch_time(
 	sch_id varchar(12) not null,
 	sch_time varchar(12) not null,
 	CONSTRAINT pk_camp_sch_info PRIMARY KEY (sch_id, sch_time)
+);
+
+-- 20.캠페인 디자인 정보
+create table camp_design (
+    camp_id VARCHAR(50) NOT NULL PRIMARY KEY, -- 캠페인 ID
+    design_data JSON NOT NULL,                  -- nodes, edges 데이터를 담을 JSON
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

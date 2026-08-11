@@ -119,6 +119,7 @@ public class DataformatObjStrategy implements ComponentStrategy{
     }
 
     @Override
+//    public ComponentResponse findById(ComponentRequest request) {
     public ComponentResponse findById(ComponentRequest request) {
 
         Cmpnt cmpnt = componentRepository.findById(request.getCmpntId())

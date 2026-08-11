@@ -90,6 +90,10 @@ export const campService = {
     return apiClient.get<CampDesignDto>(`/api/camp/design/${campId}`);
   },
 
+  saveCampDesign(campId: string, payload: CampDesignDto): Promise<ApiResult<CampDesignDto>> {
+    return apiClient.post<CampDesignDto>(`/api/camp/design/${campId}`, payload);
+  },
+
   /**
    * 캠페인 분류 조회
    * GET /api/camp/brch

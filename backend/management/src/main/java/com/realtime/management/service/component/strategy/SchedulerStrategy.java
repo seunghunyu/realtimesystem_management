@@ -73,8 +73,10 @@ public class SchedulerStrategy implements ComponentStrategy{
 
         if ("batch".equalsIgnoreCase(data.getObjKind()) && data.getTimes() != null && !data.getTimes().isEmpty()) {
             List<CampSchTime> timeList = data.getTimes().stream()
+
                     .map(time -> CampSchTime.builder()
                             .id(new CampSchTimeId(request.getCmpntId(), time))
+                            .schInfo(schInfo)
                             .build())
                     .toList();
 
@@ -141,7 +143,9 @@ public class SchedulerStrategy implements ComponentStrategy{
                     .toList();
         }
         SchedulerData schedulerData = SchedulerData.builder()
+                .schId(schInfo.getSchId())
                 .schNm(schInfo.getSchNm())
+                .schDesc(schInfo.getSchDesc())
                 .objKind(schInfo.getObjKind())
                 .strDt(schInfo.getStrDt())
                 .endDt(schInfo.getEndDt())

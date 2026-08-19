@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {Calendar } from "@carbon/icons-react"; // Calendar 아이콘 추가
+import { Calendar, Add, CheckmarkFilled, Close } from "@carbon/icons-react";
+import { cmpntService } from '../../services/cmpntService';
+import { ComponentRequest, ComponentResponse } from "../../services/cmpntType";
 
 const Toast = ({ message }: { message: string }) => (
   <div className="fixed bottom-5 right-5 z-[100] bg-gray-900 border border-gray-700 text-white px-5 py-3 rounded-xl shadow-2xl text-sm animate-fade-in-up">
@@ -7,9 +9,11 @@ const Toast = ({ message }: { message: string }) => (
   </div>
 );
 interface SchedulerProps {
-  cmpntId?: string;
+  cmpntId?: string;  
+  campId?: string;
+  fromCmpntId?: string;
   onClose: () => void;
-  onSave: (data: { name: string }) => void;
+  onSave: (data: ComponentResponse) => void;
 }
 
 const initialFormState = {
@@ -30,7 +34,7 @@ interface FormState {
   schDesc: string;
 }
 
-export function DataFormat({ cmpntId, onClose, onSave }: SchedulerProps){
+export function DataFormat({ cmpntId, campId, fromCmpntId, onClose, onSave }: SchedulerProps){
   const [form, setForm] = useState(initialFormState);  
   useEffect(() => {
           //cmpntId가 전달되어 온 경우에만 API에서 정보를 조회

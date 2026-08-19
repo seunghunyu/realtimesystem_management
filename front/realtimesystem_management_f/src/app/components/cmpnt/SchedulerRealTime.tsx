@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, CheckmarkFilled, Close } from "@carbon/icons-react"; // Calendar 아이콘 추가
-import { cmpntService, SchDto } from '../../services/cmpntService';
+import { cmpntService } from '../../services/cmpntService';
 import { ComponentRequest, ComponentResponse } from "../../services/cmpntType";
-import { campService } from '../../services/campService';
 const Toast = ({ message }: { message: string }) => (
   <div className="fixed bottom-5 right-5 z-[100] bg-gray-900 border border-gray-700 text-white px-5 py-3 rounded-xl shadow-2xl text-sm animate-fade-in-up">
     ✅ {message}
@@ -231,7 +230,7 @@ export function SchedulerRealTime({ cmpntId, campId, fromCmpntId, onClose, onSav
           <button onClick={onClose} className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-neutral-200 text-sm font-medium transition-colors">취소</button>
           <button onClick={handleSave} 
                   disabled={loading}
-                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors">확인</button>
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors">저장</button>
         </div>
         {/* 💡 등록 완료 성공 오버레이 */}
         {submitted && (

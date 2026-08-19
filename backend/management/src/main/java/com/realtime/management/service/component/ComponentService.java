@@ -13,6 +13,4 @@ public interface ComponentService {
 
     ComponentResponse findById(ComponentRequest request);
     List<ComponentResponse> findAll();
-
-
 }

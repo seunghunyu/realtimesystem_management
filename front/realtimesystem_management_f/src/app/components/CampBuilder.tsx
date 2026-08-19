@@ -412,6 +412,23 @@ export function CampBuilder({ campId }: CampBuilderProps) {
       // 필요하다면 클릭한 노드의 ID를 상태로 저장해둘 수도 있습니다.
       setSelectedNodeId(node.id);
       setComponentType('realtime'); 
+    }else if(node.data.label === "데이터 포맷팅") {
+      setSelectedNodeId(node.id);
+      setComponentType('dataformat'); 
+    }else if(node.data.label === "필터 조건") {
+      setSelectedNodeId(node.id);
+      setComponentType('filtering');    
+    }else if(node.data.label === "중복 제거") {
+      setSelectedNodeId(node.id);
+      setComponentType('cleansing');    
+    }else if(node.data.label === "SMS") {
+      setSelectedNodeId(node.id);
+      setComponentType('sms');
+    }else if(node.data.label === "PUSH") {
+      setSelectedNodeId(node.id);
+      setComponentType('push');
+    }else {
+      console.log("더블클릭 이벤트 발생, 하지만 해당 노드에 대한 모달이 정의되어 있지 않습니다.");
     }
   }, []);
 
@@ -466,9 +483,10 @@ export function CampBuilder({ campId }: CampBuilderProps) {
       // 1. 저장 성공 오버레이 활성화
       setSubmitted(true);
       // 2. 1초 대기 (완료 연출 확인)
-      await new Promise((resolve) => setTimeout(resolve, 900));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      showToast("전체 설계 저장이 완료되었습니다.");
+      setSubmitted(false);
+      //showToast("전체 설계 저장이 완료되었습니다.");
     } catch (error) {
       console.error("저장 오류:", error);
     }
@@ -633,6 +651,8 @@ export function CampBuilder({ campId }: CampBuilderProps) {
             {componentType === 'batch' && (
               <SchedulerBatch 
                 cmpntId={selectedCmpntId}
+                campId={campId || undefined}
+                fromCmpntId={fromCmpntId}
                 onClose={() => setComponentType(null)} 
                 onSave={handleComponentSave} 
               />
@@ -649,6 +669,8 @@ export function CampBuilder({ campId }: CampBuilderProps) {
             {componentType === 'dataformat' && (
               <DataFormat 
                 cmpntId={selectedCmpntId}
+                campId={campId || undefined}
+                fromCmpntId={fromCmpntId}
                 onClose={() => setComponentType(null)} 
                 onSave={handleComponentSave} 
               />
